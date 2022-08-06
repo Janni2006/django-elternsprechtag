@@ -1,3 +1,4 @@
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -26,8 +27,8 @@
             <div class="content">
 
                 <ul class="links">
-                    <li><a href="{% url 'home' %}">Home</a></li>
-                    <li><a href="#">About</a></li>
+                    <li><a href="{% url 'home' %}">{% translate 'Home' %}</a></li>
+                    <li><a href="#">{% translate "Events" %}</a></li>
                     <li>
                         <a href="#" class="desktop-link">{{ user.get_username }}</a>
                         <input type="checkbox" id="show-services">
@@ -44,14 +45,14 @@
                                     {% endfor %}
                                 </ul>
                             </li>
-                            <li><a href="{% url 'logout' %}">Logout</a></li>
+                            <li><a href="{% url 'logout' %}">{% translate "Logout" %}</a></li>
                         </ul>
                     </li>
                 </ul>
             </div>
             <label for="show-search" class="search-icon"><i class="fas fa-search"></i></label>
             <form action="#" class="search-box">
-                <input type="text" placeholder="Type Something to Search..." required>
+                <input type="text" placeholder="{% translate 'Type Something to Search...' %}" required>
                 <button type="submit" class="go-icon"><i class="fas fa-long-arrow-alt-right"></i></button>
             </form>
         </nav>
