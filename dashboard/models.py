@@ -5,9 +5,19 @@ from django.db import models
 from django.core.cache import cache
 from authentication.models import CustomUser, Student
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 # Create your models here.
 
+class BaseEvent(models.Model):
+    CHOICES_TYPE = ((0, _("Elternsprechtag")), (1, _("Sprechstunde")), (2, _("Others")))
+
+    event_type = models.IntegerField(_("Type"), choices=CHOICES_TYPE, default=2)
+    room = models.CharField(default=None, max_length=48, blank=True)
+    teachers = models.ManyToManyField(CustomUser, limit_choices_to={'role': 1}, default=None, null=True, blank=True)
+    extra_config = models.JSONField(null=True)
+
+    #json (booking start and end)
 
 class Event(models.Model):  # Termin
     # identifier für diesen speziellen Termin
@@ -22,12 +32,12 @@ class Event(models.Model):  # Termin
     student = models.ManyToManyField(
         Student, default=None, null=True, blank=True)
 
+    base_event = models.ForeignKey(BaseEvent, on_delete=models.CASCADE)
+
     start = models.DateTimeField(default=timezone.now)
     end = models.DateTimeField(default=timezone.now)
 
-    room = models.IntegerField(default=None, blank=True, null=True)
-
-    occupied = models.BooleanField(default=False)
+    occupied = models.BooleanField(default=False) # use the json instead -> delete this later
 
 
 # Anfragen, die der Lehrer an einen Schüler schickt. Muss einzelnd sein, weil es auch möglich ist, dass es noch keinen Elternaccount zum Schüler gibt

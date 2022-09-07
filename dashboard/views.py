@@ -105,7 +105,7 @@ def bookEvent(request, event_id):  # hier werden final die Termine dann gebucht
     else:
         if event.occupied:
             if event.parent == request.user:
-                return render(request, "dashboard/events/self_occupied.html")
+                return render(request, "dashboard/events/self_occupied.html") # side to edit the event
             else:
                 return render(request, "dashboard/events/occupied.html")
         elif request.method == 'POST':
@@ -164,7 +164,7 @@ def inquiryView(request, inquiry_id):
 
 
 @login_required
-def eventView(request, event_id):
+def eventView(request, event_id): # nur angefangen ist die edit seite, wo man sich die events nochmal angucken kann
     try:
         event = Event.objects.get(id=event_id)
     except Event.DoesNotExist:
