@@ -90,14 +90,15 @@ def bookEventTeacherList(request, teacher_id):
             events.append({'event': event, 'url': reverse(
                 'book_event_per_id', args=[event.id])})
         booked_events = []
-        for event in Event.objects.filter(Q(occupied=True), Q(parent=request.user)):
-            booked_events.append({'event': event, 'url': reverse(
-                'event_per_id', args=[event.id])})
-    return render(request, 'dashboard/events/teacher.html', {'teacher': teacher, 'events': events, 'booked_events': booked_events})
+        for event in Event.objects.filter(Q(
+    dependencies = [
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ("authentication", "0001_initial"),
+    ]
 
-
-@login_required
-@parent_required
+    'operations = [
+        migrations.CreateModel(
+            name="Event",'
 @lead_started
 def bookEvent(request, event_id):  # hier werden final die Termine dann gebucht
     try:
