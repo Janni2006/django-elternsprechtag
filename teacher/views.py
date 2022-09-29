@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from authentication.models import CustomUser
 from dashboard.models import TeacherStudentInquiry, Student, Event
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -7,6 +8,7 @@ from django.views import View
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.encoding import force_str, force_bytes
 from django.http import Http404
+from django.utils.decorators import method_decorator
 from .decorators import teacher_required
 from .forms import createInquiryForm, editInquiryForm
 
@@ -14,6 +16,9 @@ from .forms import createInquiryForm, editInquiryForm
 
 from django.urls import reverse
 from django.contrib import messages
+
+
+teacher_decorators = [login_required, teacher_required]
 
 
 @login_required
@@ -38,18 +43,20 @@ def studentList(request):
         students = Student.objects.all()
     else:
         students = Student.objects.filter(
-            Q(first_name__icontains=search) | Q(last_name__icontains=search)).order_by('shield_id')
+            Q(first_name__icontains=search) | Q(last_name__icontains=search)).order_by('id')
     paginator = Paginator(students, 25)
     page_obj = paginator.get_page(page_number)
     print(page_obj)
     return render(request, "teacher/studentList.html", {'page_obj': page_obj})
 
 
+@method_decorator(teacher_decorators, name='dispatch')
 class DetailStudent(View):
     def get(self, request):
         return render(request, "teacher/student.html")
 
 
+@method_decorator(teacher_decorators, name='dispatch')
 class InquiryView(View):
     form_class = editInquiryForm
 
@@ -81,7 +88,6 @@ class InquiryView(View):
                        'parent': inquiry.parent,
                        'event': inquiry.event}
             form = self.form_class(request.POST, initial=initial)
-            print(request.POST)
             if form.is_valid():
                 inquiry.reason = form.cleaned_data['reason']
                 inquiry.save()
@@ -90,7 +96,52 @@ class InquiryView(View):
             return render(request, "teacher/inquiry.html", {'form': form})
 
 
+@method_decorator(teacher_decorators, name='dispatch')
 class CreateInquiryView(View):
-    def get(self, request, id):
-        form = createInquiryForm(request=request)
+
+    def get(self, request, studentID):
+        try:
+            student = Student.objects.get(id__exact=studentID)
+        except Student.DoesNotExist:
+            return Http404("Student not found")
+        else:
+            # redirect the user if an inquiry already exists ==> prevent the userr to create a new one
+            inquiry = TeacherStudentInquiry.objects.filter(
+                Q(student=student), Q(teacher=request.user))
+            if inquiry:
+                messages.info(
+                    request, "Sie haben bereits eine Anfrage für dieses Kind erstellt. Im folgenden haben Sie die Möglichkeit diese Anfrage zu bearbeiten.")
+                return redirect('teacher_show_inquiry', id=urlsafe_base64_encode(force_bytes(inquiry.first().id)))
+
+            # let the user create a new inquiry
+            parent = CustomUser.objects.filter(
+                Q(role=0), Q(students=student)).first
+            initial = {'student': student, 'parent': parent}
+            form = createInquiryForm(initial=initial)
+        return render(request, "teacher/createInquiry.html", {'form': form})
+
+    def post(self, request, studentID):
+        try:
+            student = Student.objects.get(id__exact=studentID)
+        except Student.DoesNotExist:
+            return Http404("Student not found")
+        else:
+            # redirect the user if an inquiry already exists ==> prevent the userr to create a new one
+            inquiry = TeacherStudentInquiry.objects.filter(
+                Q(student=student), Q(teacher=request.user))
+            if inquiry:
+                messages.info(
+                    request, "Sie haben bereits eine Anfrage für dieses Kind erstellt. Im folgenden haben Sie die Möglichkeit diese Anfrage zu bearbeiten.")
+                return redirect('teacher_show_inquiry', id=urlsafe_base64_encode(force_bytes(inquiry.first().id)))
+
+            # let the user create a new inquiry
+            parent = CustomUser.objects.filter(
+                Q(role=0), Q(students=student)).first
+            initial = {'student': student, 'parent': parent}
+            form = createInquiryForm(request.POST, initial=initial)
+            if form.is_valid():
+                TeacherStudentInquiry.objects.create(
+                    teacher=request.user, student=form.cleaned_data["student"], parent=form.cleaned_data["parent"], reason=form.cleaned_data["reason"])
+                messages.success(request, "Anfrage erstellt")
+                return redirect('teacher_dashboard')
         return render(request, "teacher/createInquiry.html", {'form': form})
