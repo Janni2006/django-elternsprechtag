@@ -42,7 +42,9 @@ INSTALLED_APPS = [
     'authentication',
     'help',
     'dashboard',
+    'teacher',
     'corsheaders',  # just for development purposes
+    'colorfield'
 ]
 
 MIDDLEWARE = [
@@ -153,3 +155,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'emails')
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
+# Celery settings
+CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_RESULT_BACKEND = "redis://localhost:6379"

@@ -5,6 +5,7 @@ from datetime import datetime
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from colorfield.fields import ColorField
 
 from .managers import CustomUserManager
 
@@ -12,11 +13,12 @@ from .managers import CustomUserManager
 
 
 class Student(models.Model):  # Schüler
-    # shield_id = models.CharField(
-    #     max_length=32, unique=True, primary_key=True, editable=False)
+    shield_id = models.CharField(
+        max_length=38, unique=True)
     first_name = models.CharField(_("First name"), max_length=48)
     last_name = models.CharField(_("Last name"), max_length=48)
     child_email = models.EmailField(max_length=200, null=True)
+    class_name = models.CharField(max_length=2, default="")
     registered = models.BooleanField(default=False)
 
     def __str__(self):
@@ -48,10 +50,23 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # Erwachsene (also alle a
         return self.email
 
 
+class Tag(models.Model):
+    name = models.CharField(max_length=32)
+    synonyms = models.TextField(null=True, blank=True)
+    color = ColorField(
+        default="#"+''.join([random.choice('ABCDEF0123456789') for i in range(6)]))
+
+    def __str__(self):
+        return self.name
+
+
 class TeacherExtraData(models.Model):
     teacher = models.OneToOneField(
         CustomUser, on_delete=models.CASCADE, limit_choices_to={"role": 1})
-    tags = models.TextField()
+    acronym = models.CharField(max_length=3, default="")
+    # tags = models.TextField(null=True, blank=True)
+    tags = models.ManyToManyField(Tag, blank=True)
+    room = models.IntegerField(blank=True, null=True)
 
 
 def generate_unique_code():
