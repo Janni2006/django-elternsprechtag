@@ -49,3 +49,6 @@ def search(request):
         result = teacher.filter(last_name__icontains=request_search)
 
     return render(request, 'dashboard/search.html', {'teachers': result, 'search': request_search})
+
+#h
+
