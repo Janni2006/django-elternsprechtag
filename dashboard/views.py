@@ -16,12 +16,15 @@ def public_dashboard(request):
 def search(request):
     teacher = CustomUser.objects.filter(role=1)
     request_search = request.GET.get('q', None)
+    ans = 'None'
     if request_search is None:
-        print('None')
+        ans = 'Please enter the name of a teacher'
     elif request_search.startswith('#'):
         request_search = request_search[1:]
-        result = teacher.filter(tags__icontains=request_search)
+        result = teacher.teacherExtraData.filter(tags__icontains=request_search)
+        ans = 'Your search results with the subject ' + request_search
     else:
         result = teacher.filter(last_name__icontains=request_search)
+        ans = 'Your search results for  ' + request_search
 
-    return render(request, 'dashboard/search.html', {'teachers': result, 'search': request_search})
+    return render(request, 'dashboard/search.html', {'teachers': result, 'search': request_search, 'ans': ans})
