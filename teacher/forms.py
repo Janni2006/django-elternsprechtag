@@ -49,16 +49,14 @@ class changeProfileForm(forms.ModelForm):
         return super(changeProfileForm, self).save(commit=commit)
 
 
-class changeTeacherPictureForm(forms.ModelForm):
-    change_picture = forms.BooleanField(widget=forms.HiddenInput, initial=True)
+class configureTagsForm(forms.ModelForm):
+    tags = forms.ModelMultipleChoiceField(
+        queryset=Tag.objects, widget=forms.CheckboxSelectMultiple, required=False)
+    change_tags = forms.BooleanField(widget=forms.HiddenInput, initial=True)
 
     class Meta:
         model = TeacherExtraData
-        fields = ('image',)
-
-
-class configureTagsForm(forms.Form):
-    tags = forms.ModelMultipleChoiceField(queryset=Tag.objects)
+        fields = ('tags',)
 
 
 class changePasswordForm(PasswordChangeForm):
