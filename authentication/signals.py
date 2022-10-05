@@ -28,7 +28,8 @@ def add_groups(sender, instance, **kwargs):
 @receiver(post_save, sender=CustomUser)
 def add_parents_to_group(sender, instance, created, **kwargs):
     if created and instance.role == 0:
-        parent_group = Group.objects.get_or_create(name="parents")
+        parent_group, group_created = Group.objects.get_or_create(
+            name="parents")
         parent_group.user_set.add(instance)
 
 

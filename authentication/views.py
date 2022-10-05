@@ -46,10 +46,12 @@ def register(request, user_token, key_token):
                             last_name=form.cleaned_data['last_name'], role=0)
                         cu.set_password(form.cleaned_data['password'])
                         cu.save()
+
                         cu.students.add(user_data.student)
-                        cu.save()
+                        # cu.save()
                         user_data.delete()
-                        return redirect('login')#{'page': request.GET.get("page")}
+                        # {'page': request.GET.get("page")}
+                        return redirect('login')
 
                 else:
                     form = Register_Parent_Account()

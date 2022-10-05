@@ -38,7 +38,7 @@ class InquiryForm(forms.Form):
         self.fields['student'].queryset = self.request.user.students.all()
         self.fields['student'].initial = self.selected_student
         self.fields['event'].queryset = Event.objects.filter(
-            Q(requester=self.teacher), Q(occupied=False))
+            Q(teacher=self.teacher), Q(occupied=False))
 
     def clean(self):
         cleaned_data = super(InquiryForm, self).clean()
