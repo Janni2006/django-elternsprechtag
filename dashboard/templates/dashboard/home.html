@@ -1,0 +1,50 @@
+{% extends "dashboard/base.html" %}
+{% load i18n %}
+
+{% block title %}Übersicht{% endblock title %}
+
+{% block head %}{% endblock head %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="container col-md-8">
+        {% if booked_events|length > 0 %}
+        <div class="row p-1">
+            <div class="col col-8">
+                <p class="h1">Events</p>
+                <p class="text-muted">Alle Termine, die in Verbindung mit Ihnen stehen</p>
+            </div>
+            <div class="col col-4 d-grid gap-2 justify-content-md-end">
+                <button class="btn btn-primary p-4" type="button">Download PDF</button>
+            </div>
+        </div>
+
+        <div class="accordion" id="event-accordion">
+            {% for event in booked_events %}
+            <div class="accordion-item" id="event-accordion-item-{{ event.id }}">
+                <h2 class="accordion-header" id="event-accordion-heading-{{ event.id }}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#event-accordion-collapse-{{ event.id }}" aria-expanded="false"
+                        aria-controls="event-accordion-collapse-{{ event.id }}">
+                        {{ event.event.teacher.last_name }}
+                    </button>
+                </h2>
+                <div id="event-accordion-collapse-{{ event.id }}" class="accordion-collapse collapse"
+                    aria-labelledby="event-accordion-heading-{{ event.id }}" data-bs-parent="#event-accordion">
+                    <div class="accordion-body">
+                        <strong>Startzeit: </strong>{{ event.event.start.hour }}:{{ event.event.start.minute }} <br />
+                        <strong>Schüler:innen: </strong> {{ event.event.students }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="container">
+            <p class="h1">{% translate 'Events' %}</p>
+            <p class="text-muted">{% translate 'You haven´t booked any events yet' %}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock content %}

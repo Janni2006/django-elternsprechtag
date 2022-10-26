@@ -22,16 +22,21 @@ from django.http import Http404
 @parent_required
 def public_dashboard(request):
     students = request.user.students.all()
+    user = CustomUser.objects.get(id=request.user.id)
+    print(user.students.all())
     inquiries = []
     for inquiry in Inquiry.objects.filter(Q(type=0), Q(respondent=request.user), Q(event=None)):
         inquiry_id = urlsafe_base64_encode(force_bytes(inquiry.id))
         inquiries.append({'teacher': inquiry.teacher, 'student': inquiry.student,
                          'inquiry_link': reverse('inquiry_detail_view', args=[inquiry_id])})
     booked_events = []
+    booked_events_day = []
+    for time in list(Event.objects.filter(Q(occupied=True), Q(
+            parent=request.user)).values_list("start", flat=True)):
     for event in Event.objects.filter(Q(occupied=True), Q(parent=request.user)):
         booked_events.append({'event': event, 'url': reverse(
             'event_per_id', args=[event.id])})
-    return render(request, 'dashboard/public_dashboard.html', {'inquiries': inquiries, 'booked_events': booked_events})
+    return render(request, 'dashboard/home.html', {'inquiries': inquiries, 'booked_events': booked_events})
 
 
 @ login_required
@@ -92,7 +97,7 @@ def bookEventTeacherList(request, teacher_id):
         print("Error")
     else:
         events = []
-        for event in Event.objects.filter(Q(requester=teacher), Q(occupied=False)):
+        for event in Event.objects.filter(Q(teacher=teacher), Q(occupied=False)):
             events.append({'event': event, 'url': reverse(
                 'book_event_per_id', args=[event.id])})
         booked_events = []
