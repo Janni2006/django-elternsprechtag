@@ -52,11 +52,21 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # Erwachsene (also alle a
         return self.email
 
 
+def generate_new_color():
+
+    while True:
+        color = "#"+''.join([random.choice('ABCDEF0123456789')
+                            for i in range(6)])
+        if not Tag.objects.filter(color=color):
+            break
+
+    return color
+
+
 class Tag(models.Model):
     name = models.CharField(max_length=32)
     synonyms = models.TextField(null=True, blank=True)
-    color = ColorField(
-        default="#"+''.join([random.choice('ABCDEF0123456789') for i in range(6)]))
+    color = ColorField(default=generate_new_color)
 
     def __str__(self):
         return self.name
@@ -74,15 +84,16 @@ class TeacherExtraData(models.Model):
     def __str__(self):
         return f'{self.teacher.last_name} extraData'
 
-    def save(self):
-        super().save()
+    def save(self, *args, **kwargs):
+        super(TeacherExtraData, self).save(*args, **kwargs)
         # resize the image
-        img = Image.open(self.image.path)
+        if self.image:
+            img = Image.open(self.image.path)
 
-        if img.height > 300 or img.width > 300:
-            output_size = (300, 300)
-            img.thumbnail(output_size)
-            img.save(self.image.path)
+            if img.height > 300 or img.width > 300:
+                output_size = (300, 300)
+                img.thumbnail(output_size)
+                img.save(self.image.path)
 
 
 def generate_unique_code():
@@ -118,7 +129,7 @@ class Upcomming_User(models.Model):  # Alle Schüler, die noch keine Eltern habe
     user_token = models.CharField(
         max_length=12, primary_key=True, default=generate_unique_code)
     access_key = models.CharField(max_length=12, default=generate_unique_code)
-    otp = models.IntegerField(default=generate_unique_otp)
+    otp = models.CharField(max_length=6, default=generate_unique_otp)
     otp_verified = models.BooleanField(default=False)
     otp_verified_date = models.DateTimeField(default=timezone.now)
     created = models.DateTimeField(default=timezone.now)
