@@ -13,6 +13,7 @@ from .decorators import teacher_required
 from .forms import *
 from django.contrib.auth import update_session_auth_hash
 from django.core.exceptions import BadRequest
+from django.utils import timezone
 # Create your views here.
 
 from django.urls import reverse
@@ -38,8 +39,8 @@ def dashboard(request):
 
     datetime_objects = events.values_list("start", flat=True)
     for datetime_object in datetime_objects:
-        if datetime_object.date() not in dates:
-            dates.append(datetime_object.date())
+        if timezone.localtime(datetime_object).date() not in dates:
+            dates.append(timezone.localtime(datetime_object).date())
 
     events_dict = {}
     for date in dates:

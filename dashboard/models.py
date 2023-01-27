@@ -1,5 +1,4 @@
 import uuid
-import datetime
 
 from django.db import models
 from django.core.cache import cache
@@ -98,6 +97,6 @@ class SiteSettings(SingletonModel):
     lead_start = models.DateField(default=timezone.now)
     lead_inquiry_start = models.DateField(default=timezone.now)
     event_duration = models.DurationField(
-        default=datetime.timedelta(seconds=0))
+        default=timezone.timedelta(seconds=0))
     time_start = models.TimeField(default=timezone.now)
     time_end = models.TimeField(default=timezone.now)
