@@ -15,6 +15,8 @@ from django.contrib.auth import update_session_auth_hash
 from django.core.exceptions import BadRequest
 # Create your views here.
 
+from django.utils import timezone
+
 from django.urls import reverse
 from django.contrib import messages
 
@@ -38,8 +40,8 @@ def dashboard(request):
 
     datetime_objects = events.values_list("start", flat=True)
     for datetime_object in datetime_objects:
-        if datetime_object.date() not in dates:
-            dates.append(datetime_object.date())
+        if timezone.localtime(datetime_object).date() not in dates:
+            dates.append(timezone.localtime(datetime_object).date())
 
     events_dict = {}
     for date in dates:
@@ -314,17 +316,17 @@ class EventDetailView(View):
             return render(request, "teacher/event/detailEvent.html", context={"cancel_event": cancel_form, "event": event})
 
 
-class EventListView(View):
-    def get(self, request):
-        events = Event.objects.filter(
-            Q(teacher=request.user), Q(occupied=True))
-        dates = []
+# class EventListView(View):
+#     def get(self, request):
+#         events = Event.objects.filter(
+#             Q(teacher=request.user), Q(occupied=True))
+#         dates = []
 
-        datetime_objects = events.values_list("start", flat=True)
-        for datetime_object in datetime_objects:
-            if datetime_object.date() not in dates:
-                dates.append(datetime_object.date())
+#         datetime_objects = events.values_list("start", flat=True)
+#         for datetime_object in datetime_objects:
+#             if datetime_object.date() not in dates:
+#                 dates.append(datetime_object.date())
 
-        events_dict = {}
-        for date in dates:
-            events_dict[str(date)] = events.filter(start__date=date)
+#         events_dict = {}
+#         for date in dates:
+#             events_dict[str(date)] = events.filter(start__date=date)
