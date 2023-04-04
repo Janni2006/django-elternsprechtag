@@ -10,7 +10,7 @@ click-plugins==1.1.1
 click-repl==0.2.0
 crispy-bootstrap5==0.7
 Deprecated==1.2.13
-Django==4.1
+Django==4.2
 django-colorfield==0.7.2
 django-cors-headers==3.13.0
 django-crispy-forms==1.14.0
