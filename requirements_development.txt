@@ -58,7 +58,7 @@ sqlparse==0.4.4
 svglib==1.5.1
 tinycss2==1.2.1
 toml==0.10.2
-tqdm==4.65.0
+tqdm==4.66.4
 typing_extensions==4.5.0
 tzdata==2022.7
 tzlocal==4.3
