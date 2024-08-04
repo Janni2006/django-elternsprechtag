@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "general_tasks",
     "colorfield",
     "administrative",
+    "custom_backup",
 ]
 
 MIDDLEWARE = [
