@@ -58,7 +58,7 @@ python-bidi==0.4.2
 python-crontab==3.2.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
-pytz==2024.1
+pytz==2024.2
 pytz-deprecation-shim==0.1.0.post0
 PyYAML==6.0.1
 qrcode==7.4.2
