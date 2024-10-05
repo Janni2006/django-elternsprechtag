@@ -77,7 +77,7 @@ typing_extensions==4.12.2
 tzdata==2024.1
 tzlocal==5.2
 uritools==4.0.3
-urllib3==2.2.2
+urllib3==2.2.3
 uuid==1.30
 vine==5.1.0
 wcwidth==0.2.13
