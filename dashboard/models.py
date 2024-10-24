@@ -197,6 +197,7 @@ class TeacherEventGroup(models.Model):
 class Event(models.Model):  # Termin
     # identifier für diesen speziellen Termin
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # id_uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     base_event = models.ForeignKey(BaseEventGroup, on_delete=models.CASCADE, null=True)
     day_group = models.ForeignKey(DayEventGroup, on_delete=models.CASCADE, null=True)
     teacher = models.ForeignKey(
