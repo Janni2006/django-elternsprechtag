@@ -5,8 +5,8 @@ from django.db import migrations, models
 
 
 def gen_uuid(apps, schema_editor):
-    MyModel = apps.get_model("myapp", "MyModel")
-    for row in MyModel.objects.all():
+    Events = apps.get_model("dashboard", "event")
+    for row in Events.objects.all():
         row.uuid = uuid.uuid4()
         row.save(update_fields=["uuid"])
 
