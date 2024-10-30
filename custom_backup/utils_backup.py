@@ -87,6 +87,13 @@ class CustomBackup:
     def backup_custom_user(self):
         user_dict = []
         for user in CustomUser.objects.all():
+            # signed_password = signer.sign(user.password)
+            signed_password = user.password
+            user_groups = [group.name for group in user.groups.all()]
+            user_permissions = [
+                permission.pk for permission in user.user_permissions.all()
+            ]
+
             match user.role:
                 case 0:
                     user_dict.append(
@@ -99,14 +106,11 @@ class CustomBackup:
                                 student.shield_id for student in user.students.all()
                             ],
                             "is_active": user.is_active,
-                            "permissions": [
-                                permission.pk
-                                for permission in user.user_permissions.all()
-                            ],
+                            "permissions": user_permissions,
                             "is_staff": False,
                             "is_superuser": user.is_superuser,
-                            "password": signer.sign(user.password),
-                            "groups": [group.name for group in user.groups.all()],
+                            "password": signed_password,
+                            "groups": user_groups,
                         }
                     )
                 case 1:
@@ -120,14 +124,11 @@ class CustomBackup:
                                 "first_name": user.first_name,
                                 "last_name": user.last_name,
                                 "is_active": user.is_active,
-                                "permissions": [
-                                    permission.pk
-                                    for permission in user.user_permissions.all()
-                                ],
+                                "permissions": user_permissions,
                                 "is_staff": True,
                                 "is_superuser": user.is_superuser,
-                                "password": signer.sign(user.password),
-                                "groups": [group.name for group in user.groups.all()],
+                                "password": signed_password,
+                                "groups": user_groups,
                             }
                         )
                     else:
@@ -140,14 +141,11 @@ class CustomBackup:
                                 "acronym": extra_data.acronym,
                                 "tags": [tag.name for tag in extra_data.tags.all()],
                                 "is_active": user.is_active,
-                                "permissions": [
-                                    permission.pk
-                                    for permission in user.user_permissions.all()
-                                ],
+                                "permissions": user_permissions,
                                 "is_staff": True,
                                 "is_superuser": user.is_superuser,
-                                "password": signer.sign(user.password),
-                                "groups": [group.name for group in user.groups.all()],
+                                "password": signed_password,
+                                "groups": user_groups,
                             }
                         )
                 case 2:
@@ -158,14 +156,11 @@ class CustomBackup:
                             "first_name": user.first_name,
                             "last_name": user.last_name,
                             "is_active": user.is_active,
-                            "permissions": [
-                                permission.pk
-                                for permission in user.user_permissions.all()
-                            ],
+                            "permissions": user_permissions,
                             "is_staff": user.is_staff,
                             "is_superuser": user.is_superuser,
-                            "password": signer.sign(user.password),
-                            "groups": [group.name for group in user.groups.all()],
+                            "password": signed_password,
+                            "groups": user_groups,
                         }
                     )
         return user_dict
@@ -200,6 +195,129 @@ class CustomBackup:
         }
         return settings_dict
 
+    def backup_individual_event(self, event: Event):
+        event_dict = {
+            "start": event.start,
+            "end": event.end,
+            "occupied": event.occupied,
+            "status": event.status,
+            "lead_status": event.lead_status,
+            "lead_status_last_change": event.lead_status_last_change,
+            "lead_manual_override": event.lead_manual_override,
+            "disable_automatic_changes": event.disable_automatic_changes,
+            "students": list(event.student.all().values_list("shield_id", flat=True)),
+        }
+        return event_dict
+
+    def backup_individual_event_change_formular(self, formular: EventChangeFormula):
+        formular_dict = {
+            "type": formular.type,
+            "child_fomular": [
+                self.backup_individual_event_change_formular(child_formular)
+                for child_formular in formular.childformular.all()
+            ],
+            "start_time": formular.start_time.isoformat(),
+            "end_time": formular.end_time.isoformat(),
+            "no_events": formular.no_events,
+            "status": formular.status,
+            "created_at": formular.created_at,
+        }
+        return formular_dict
+
+    def backup_teacher_group(self, teacher_group: TeacherEventGroup, backup_old=False):
+        events = Event.objects.filter(Q(teacher_event_group=teacher_group))
+        if not backup_old:
+            events = events.exclude(Q(start__lte=timezone.now()))
+
+        teacher_group_dict = {
+            "teacher": teacher_group.teacher.email,
+            "lead_start": teacher_group.lead_start,
+            "lead_inquiry_start": teacher_group.lead_inquiry_start,
+            "lead_end_timedelta": teacher_group.lead_end_timedelta.total_seconds(),
+            "lead_allow_same_day": teacher_group.lead_allow_same_day,
+            "room": teacher_group.room,
+            "lead_manual_override": teacher_group.lead_manual_override,
+            "lead_status": teacher_group.lead_status,
+            "lead_status_last_change": teacher_group.lead_status_last_change,
+            "disable_automatic_changes": teacher_group.disable_automatic_changes,
+            "events": [self.backup_individual_event(event) for event in events],
+            "formulars": [
+                self.backup_individual_event_change_formular(formular)
+                for formular in EventChangeFormula.objects.filter(
+                    Q(teacher_event_group=teacher_group), Q(parent_formular=None)
+                )
+            ],
+        }  # Force und manual apply werden hier nicht mit gesichert, da diese Felder im regulären Betrieb immer auf False stehen sollten. Falls sie in einem anderen Status stehen geblieben sind, soll der Fehler nicht übernommen werden.
+
+        return teacher_group_dict
+
+    def backup_day_event_group(self, day_group: DayEventGroup):
+        day_event_group_dict = {
+            "date": day_group.date,
+            "lead_start": day_group.lead_start,
+            "lead_inquiry_start": day_group.lead_inquiry_start,
+            "created": day_group.created,
+            "lead_manual_override": day_group.lead_manual_override,
+            "lead_status": day_group.lead_status,
+            "lead_status_last_change": day_group.lead_status_last_change,
+            "disable_automatic_changes": day_group.disable_automatic_changes,
+            "teacher_event_groups": [
+                self.backup_teacher_group(teacher_group)
+                for teacher_group in TeacherEventGroup.objects.filter(
+                    day_group=day_group
+                )
+            ],
+        }  # Force und manual apply werden hier nicht mit gesichert, da diese Felder im regulären Betrieb immer auf False stehen sollten. Falls sie in einem anderen Status stehen geblieben sind, soll der Fehler nicht übernommen werden.
+
+        return day_event_group_dict
+
+    def backup_individual_inquries(self, inquiry: Inquiry):
+        inquiry_dict = {
+            "type": inquiry.type,
+            "requester": inquiry.requester.email,
+            "students": [student.shield_id for student in inquiry.students.all()],
+            "respondent": inquiry.respondent.email,
+            "reason": inquiry.reason,
+            "processed": inquiry.processed,
+            "respondent_reaction": inquiry.respondent_reaction,
+            "notified": inquiry.notified,
+            "created": inquiry.created,
+            "event_start": inquiry.event.start if inquiry.event else None,
+            "event_teacher": inquiry.event.teacher if inquiry.event else None,
+        }
+        return inquiry_dict
+
+    def backup_individual_base_events(self, base_event: BaseEventGroup):
+        base_event_dict = {
+            "lead_start": base_event.lead_start,
+            "lead_inquiry_start": base_event.lead_inquiry_start,
+            "lead_status": base_event.lead_status,
+            "lead_status_last_change": base_event.lead_status_last_change,
+            "disable_automatic_changes": base_event.disable_automatic_changes,
+            "day_groups": [
+                self.backup_day_event_group(day_group)
+                for day_group in DayEventGroup.objects.filter(base_event=base_event)
+            ],
+            "inquries": [
+                self.backup_individual_inquries(inquiry)
+                for inquiry in Inquiry.objects.filter(base_event=base_event)
+            ],
+        }  # Force und manual apply werden hier nicht mit gesichert, da diese Felder im regulären Betrieb immer auf False stehen sollten. Falls sie in einem anderen Status stehen geblieben sind, soll der Fehler nicht übernommen werden.
+
+        return base_event_dict
+
+    def backup_all_events(self, backup_old=False):
+        if backup_old:
+            base_events = BaseEventGroup.objects.all()
+        else:
+            base_events = BaseEventGroup.objects.filter(valid_until__gte=timezone.now())
+
+        base_list = [
+            self.backup_individual_base_events(base_event) for base_event in base_events
+        ]
+
+        return base_list
+
     def get_backup_data(self):
         backup = {
             "upcomming_users": {
@@ -225,6 +343,10 @@ class CustomBackup:
             "settings": {
                 "version": 1,
                 "data": self.backup_settings(),
+            },
+            "events": {
+                "version": 1,
+                "data": self.backup_all_events(),
             },
         }
 

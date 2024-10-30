@@ -182,7 +182,8 @@ class CustomRestore:
             user.save()
 
             try:
-                password = signer.unsign(data["password"])
+                # password = signer.unsign(data["password"])
+                password = data["password"]
             except:
                 user.set_unusable_password()  # TODO: Hier sollte automatisch eine Reset Email an den Nutzer gesendet werden.
                 print("An unusable password was set")
@@ -212,6 +213,188 @@ class CustomRestore:
                 extra_data.save()
                 extra_data.tags.set(Tag.objects.filter(name__in=data.get("tags", [])))
 
+    def restore_individual_event(
+        self, data: dict, teacher_group: TeacherEventGroup, force=False
+    ):
+        students = Student.objects.filter(shield_id__in=data["students"])
+
+        event = Event.objects.create(
+            start=data["start"],
+            end=data["end"],
+            occupied=data["occupied"],
+            status=data["status"],
+            lead_status=data["lead_status"],
+            lead_status_last_change=data["lead_status_last_change"],
+            lead_manual_override=data["lead_manual_override"],
+            disable_automatic_changes=data["disable_automatic_changes"],
+            teacher_event_group=teacher_group,
+            teacher=teacher_group.teacher,
+            day_group=teacher_group.day_group,
+            base_event=teacher_group.day_group.base_event,
+        )
+
+        # event.occupied = data["occupied"]
+        # event.status = data["status"]
+        # event.lead_status = data["lead_status"]
+        # event.lead_status_last_change = data["lead_status_last_change"]
+        # event.lead_manual_override = data["lead_manual_override"]
+        # event.disable_automatic_changes = data["disable_automatic_changes"]
+
+        # event.save()
+
+        event.student.set(students)
+
+    def restore_individual_event_change_formular(
+        self,
+        data: dict,
+        teacher_group: TeacherEventGroup,
+        parent_formular: EventChangeFormula = None,
+    ):
+        formular = EventChangeFormula.objects.create(
+            type=data["type"],
+            start_time=data["start_time"],
+            end_time=data["end_time"],
+            no_events=data["no_events"],
+            status=data["status"],
+            created_at=data["created_at"],
+            teacher_event_group=teacher_group,
+            day_group=teacher_group.day_group,
+            date=teacher_group.day_group.date,
+            teacher=teacher_group.teacher,
+        )
+
+        if parent_formular:
+            formular.parent_formular = parent_formular
+        formular.save()
+
+        for child_data in data["child_fomular"]:
+            self.restore_individual_event_change_formular(
+                child_data, teacher_group=teacher_group, parent_formular=formular
+            )
+
+    def restore_teacher_group(self, data: dict, day_group: DayEventGroup):
+        try:
+            teacher = CustomUser.objects.get(
+                Q(email=data["teacher"]), Q(role=CustomUser.UserRoleChoices.TEACHER)
+            )
+        except:
+            pass
+        else:
+            teacher_group = TeacherEventGroup.objects.create(
+                teacher=teacher,
+                day_group=day_group,
+                lead_start=data["lead_start"],
+                lead_inquiry_start=data["lead_inquiry_start"],
+                lead_end_timedelta=timezone.timedelta(
+                    seconds=data["lead_end_timedelta"]
+                ),
+                lead_allow_same_day=data["lead_allow_same_day"],
+                room=data["room"],
+                lead_manual_override=data["lead_manual_override"],
+                lead_status=data["lead_status"],
+                lead_status_last_change=data["lead_status_last_change"],
+                disable_automatic_changes=data["disable_automatic_changes"],
+            )
+
+            for event in data["events"]:
+                self.restore_individual_event(event, teacher_group)
+
+            for formular in data["formulars"]:
+                self.restore_individual_event_change_formular(formular, teacher_group)
+
+    def restore_day_event_group(self, data: dict, base_event: BaseEventGroup):
+        day_group = DayEventGroup.objects.create(
+            date=data["date"],
+            base_event=base_event,
+            lead_start=data["lead_start"],
+            lead_inquiry_start=data["lead_inquiry_start"],
+            created=data["created"],
+            lead_manual_override=data["lead_manual_override"],
+            lead_status=data["lead_status"],
+            lead_status_last_change=data["lead_status_last_change"],
+            disable_automatic_changes=data["disable_automatic_changes"],
+        )
+
+        for teacher_group in data["teacher_event_groups"]:
+            self.restore_teacher_group(teacher_group, day_group)
+
+    def restore_individual_inquries(self, data, base_event: BaseEventGroup):
+        try:
+            requester = CustomUser.objects.get(email=data["requester"])
+        except:
+            self.logger.error(
+                f'Error while creating inquiry object. The requesting User with the email {data["requester"]} could not be found.'
+            )
+            return
+
+        try:
+            respondent = CustomUser.objects.get(email=data["respondent"])
+        except:
+            self.logger.error(
+                f'Error while creating inquiry object. The responding User with the email {data["requester"]} could not be found.'
+            )
+            return
+
+        students = Student.objects.filter(shield_id__in=data["students"])
+
+        event = None
+        if data["event_start"] and data["event_teacher"]:
+            try:
+                teacher = CustomUser.objects.get(
+                    Q(role=CustomUser.UserRoleChoices.TEACHER),
+                    Q(email=data["event_teacher"]),
+                )
+            except:
+                self.logger.error(
+                    f'Error while creating inquiry object. The event teacher with the email {data["requester"]} could not be found.'
+                )
+                return
+
+            try:
+                event = Event.objects.get(
+                    Q(start=data["start"]), Q(teacher=teacher), Q(base_event=base_event)
+                )
+            except:
+                self.logger.error(
+                    f'Error while creating inquiry object. The event of the teacher {teacher.first_name} {teacher.last_name} at {data["event_start"]} could not be found.'
+                )
+                return
+
+        inquiry = Inquiry.objects.create(
+            base_event=base_event,
+            type=data["type"],
+            requester=requester,
+            respondent=respondent,
+            reason=data["reason"],
+            processed=data["processed"],
+            event=event,
+            respondent_reaction=data["respondent_reaction"],
+            notified=data["notified"],
+            created=data["created"],
+        )
+        inquiry.students.set(students)
+
+    def restore_individual_base_event(self, data: dict):
+        base_event = BaseEventGroup.objects.create(
+            lead_start=data["lead_start"],
+            lead_inquiry_start=data["lead_inquiry_start"],
+            lead_status=data["lead_status"],
+            lead_status_last_change=data["lead_status_last_change"],
+            disable_automatic_changes=data["disable_automatic_changes"],
+        )
+
+        base_event.save()
+
+        for day_group in data["day_groups"]:
+            self.restore_day_event_group(day_group, base_event)
+
+        for inquiry in data["inquries"]:
+            self.restore_individual_inquries(inquiry, base_event)
+
+    # def restore_all_base_events(self, data):
+    #     for base in data:
+    #         self.restore_individual_base_event(base)
+
     def restore(self, data, flush=False, soft=False):
         settings_data = data["settings"]
         students_data = data["students"]
@@ -219,6 +402,7 @@ class CustomRestore:
         groups_data = data["groups"]
         upcomming_user_data = data["upcomming_users"]
         custom_user_data = data["custom_user"]
+        event_data = data["events"]
 
         self.restore_settings(settings_data["data"], settings_data["version"])
         for student in students_data["data"]:
@@ -235,6 +419,8 @@ class CustomRestore:
             )
         for custom_user in custom_user_data["data"]:
             self.restore_individual_custom_user(custom_user)
+        for base in event_data["data"]:
+            self.restore_individual_base_event(base)
 
     def restore_async(
         self, data, task, flush=False, soft=False
@@ -247,6 +433,7 @@ class CustomRestore:
         groups_data = data["groups"]
         upcomming_user_data = data["upcomming_users"]
         custom_user_data = data["custom_user"]
+        event_data = data["events"]
 
         # progress_recorder.set_progress(0, 1, "Restoring settings")
         self.restore_settings(settings_data["data"], settings_data["version"])
@@ -279,6 +466,11 @@ class CustomRestore:
             self.restore_individual_custom_user(custom_user)
             progress_recorder.set_progress(
                 index, len(custom_user_data["data"]), "Restoring users"
+            )
+        for index, base in enumerate(event_data["data"]):
+            self.restore_individual_base_event(base)
+            progress_recorder.set_progress(
+                index, len(event_data["data"]), "Restoring events"
             )
 
     def extract_tar(
