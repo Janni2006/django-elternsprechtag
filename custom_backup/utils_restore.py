@@ -195,7 +195,7 @@ class CustomRestore:
                     user.set_unusable_password()  # TODO: Hier sollte automatisch eine Reset Email an den Nutzer gesendet werden.
                     print("An unusable password was set")
 
-            user.groups.set(Group.objects.filter(pk__in=data["groups"]).all())
+            user.groups.set(Group.objects.filter(name__in=data["groups"]).all())
             user.user_permissions.set(
                 Permission.objects.filter(pk__in=data["permissions"])
             )
