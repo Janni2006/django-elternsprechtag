@@ -238,7 +238,8 @@ class CustomBackup:
                     "created_at": formular.created_at,
                 }
             except:
-                self.logger.log(
+                print(formular.start_time, formular.end_time)
+                self.logger.error(
                     "An incorrectly configured event change formular was detected. It will be ignored in the backup."
                 )
         return formular_dict
