@@ -210,39 +210,48 @@ class CustomBackup:
         return event_dict
 
     def backup_individual_event_change_formular(self, formular: EventChangeFormula):
-        if formular.no_events:
+        # if formular.no_events:
+        #     formular_dict = {
+        #         "type": formular.type,
+        #         "child_fomular": [
+        #             self.backup_individual_event_change_formular(child_formular)
+        #             for child_formular in formular.childformular.all()
+        #         ],
+        #         "start_time": None,
+        #         "end_time": None,
+        #         "no_events": True,
+        #         "status": formular.status,
+        #         "created_at": formular.created_at,
+        #     }
+        # else:
+        try:
             formular_dict = {
                 "type": formular.type,
                 "child_fomular": [
                     self.backup_individual_event_change_formular(child_formular)
                     for child_formular in formular.childformular.all()
                 ],
-                "start_time": None,
-                "end_time": None,
-                "no_events": True,
+                "start_time": (
+                    formular.start_time.isoformat()
+                    if formular.start_time and not formular.no_events
+                    else None
+                ),
+                "end_time": (
+                    formular.end_time.isoformat()
+                    if formular.end_time and not formular.no_events
+                    else None
+                ),
+                "no_events": formular.no_events,
                 "status": formular.status,
                 "created_at": formular.created_at,
             }
+        except:
+            print(formular.start_time, formular.end_time)
+            self.logger.error(
+                "An incorrectly configured event change formular was detected. It will be ignored in the backup."
+            )
         else:
-            try:
-                formular_dict = {
-                    "type": formular.type,
-                    "child_fomular": [
-                        self.backup_individual_event_change_formular(child_formular)
-                        for child_formular in formular.childformular.all()
-                    ],
-                    "start_time": formular.start_time.isoformat(),
-                    "end_time": formular.end_time.isoformat(),
-                    "no_events": False,
-                    "status": formular.status,
-                    "created_at": formular.created_at,
-                }
-            except:
-                print(formular.start_time, formular.end_time)
-                self.logger.error(
-                    "An incorrectly configured event change formular was detected. It will be ignored in the backup."
-                )
-        return formular_dict
+            return formular_dict
 
     def backup_teacher_group(self, teacher_group: TeacherEventGroup, backup_old=False):
         events = Event.objects.filter(Q(teacher_event_group=teacher_group))
