@@ -141,7 +141,7 @@ def look_for_open_inquiries():
                 )
             ]
 
-            if res_inquiries.count() > 0:
+            if len(res_inquiries) > 0:
                 async_send_mail.delay(
                     "Offene Anfragen",
                     render_to_string(

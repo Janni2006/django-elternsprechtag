@@ -366,7 +366,12 @@ def updateBaseEventValidUntil(
         # ):
         #     instance.base_event.valid_until = instance.date + timezone.timedelta(days=7)
         #     instance.base_event.save()
-        newest = DayEventGroup.objects.all().order_by("date").last()
+        print(instance.base_event)
+        newest = (
+            DayEventGroup.objects.filter(base_event=instance.base_event)
+            .order_by("date")
+            .last()
+        )
         print(newest)
         instance.base_event.valid_until = newest.date + timezone.timedelta(days=7)
         instance.base_event.save()
