@@ -90,6 +90,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "general_tasks.tasks.update_event_lead_status",
         "schedule": crontab(minute="*/1"),
     },
+    "clean_up_up_users": {
+        "task": "general_tasks.tasks.check_douple_student_parent_relationships",
+        "schedule": crontab(minute="*/1"),
+    },
 }
 
 

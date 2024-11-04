@@ -97,6 +97,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "general_tasks.tasks.update_event_lead_status",
         "schedule": crontab(minute=30, hour=1),
     },
+    "clean_up_up_users": {
+        "task": "general_tasks.tasks.check_douple_student_parent_relationships",
+        "schedule": crontab(minute=0, hour=2),
+    },
 }
 
 # RUN_CELERY_THREAD = False

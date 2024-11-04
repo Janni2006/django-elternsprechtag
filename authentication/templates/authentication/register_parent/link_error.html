@@ -1,9 +1,16 @@
-{% 
-    include "error_file_template.html" with 
-    page_title="Link invalid" 
-    page_sub_title="This registration link is invalid" 
-    page_icon="link-slash" 
-    page_icon_color="text-warning"
-    page_error_summary="There are two possibilities: \n This link was already used to register the student or there is a spell-mistake in the link you entered. Therefor the referenced student could not be found." 
-    page_action_site_visitor="If you are sure that you chose the most recent link, please contact staff to get a new registration link."
-%}  
+{% comment %} {% include 'error_file_template.html' with page_title='Link invalid' page_sub_title='This registration link is invalid' page_icon='link-slash' page_icon_color='text-warning' page_error_summary='There are two possibilities: \n This link was already used to register the student or there is a spell-mistake in the link you entered. Therefor the referenced student could not be found.' page_action_site_visitor='If you are sure that you chose the most recent link, please contact staff to get a new registration link.' %} {% endcomment %}
+
+{% load i18n %}
+
+{% translate 'Link error' as short_msg %}
+{% translate 'Link invalid' as page_title %}
+{% translate 'This registration link is invalid' as page_sub_title %}
+{% translate 'Go to Homepage' as page_cta_text %}
+{% translate 'There are two possibilities: \n This link was already used to register the student or there is a spell-mistake in the link you entered. Therefor the referenced student could not be found.' as page_error_summary %}
+{% translate 'If you are sure that you chose the most recent link, please contact staff to get a new registration link.' as page_action_site_visitor %}
+
+{% comment %} {% url 'home' as page_link %} {% endcomment %}
+
+{% with page_icon='link-slash' %}
+  {% include 'error_file_template.html' with short_msg=short_msg page_title=page_title page_sub_title=page_sub_title page_icon=page_icon page_icon_color='text-danger' page_cta_text=page_cta_text page_error_summary=page_error_summary page_action_site_visitor=page_action_site_visitor %}
+{% endwith %}
