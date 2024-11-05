@@ -39,7 +39,7 @@ class createInquiryForm(forms.Form):
         super(createInquiryForm, self).__init__(*args, **kwargs)
         self.fields["reason"].label = False
         self.initial["base_event"] = (
-            BaseEventGroup.objects.filter(lead_start__gte=timezone.now())
+            BaseEventGroup.objects.filter(valid_until__gte=timezone.now())
             .order_by("lead_start")
             .first()
         )
