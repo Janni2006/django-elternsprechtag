@@ -48,7 +48,7 @@ pillow==11.0.0
 prompt_toolkit==3.0.48
 pycodestyle==2.12.1
 pycparser==2.22
-pyHanko==0.25.1
+pyHanko==0.25.2
 pyhanko-certvalidator==0.26.3
 pyparsing==3.2.0
 pypdf==5.1.0
