@@ -1,4 +1,4 @@
-FROM python:3.10
+FROM python:3.11
 
 RUN apt-get update && apt-get upgrade -y && apt-get autoremove && apt-get autoclean && apt-get install gettext -y
 

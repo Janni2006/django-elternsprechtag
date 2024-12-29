@@ -311,23 +311,24 @@ def apply_sick_leave_formulars(sender, instance, *args, **kwargs):
             parents = list(set(list(booked_events.values_list("parent", flat=True))))
 
             for parent in parents:
-                parent_obj = CustomUser.objects.get(pk=parent)
-                parent_events = booked_events.filter(parent=parent)
+                if parent != None:
+                    parent_obj = CustomUser.objects.get(pk=parent)
+                    parent_events = booked_events.filter(parent=parent)
 
-                email_str_body = render_to_string(
-                    "dashboard/email/teacher_sick_leave/teacher_sick_leave.txt",
-                    {
-                        "parent": parent_obj,
-                        "teacher": current.teacher_event_group.teacher,
-                        "events": parent_events,
-                    },
-                )
+                    email_str_body = render_to_string(
+                        "dashboard/email/teacher_sick_leave/teacher_sick_leave.txt",
+                        {
+                            "parent": parent_obj,
+                            "teacher": current.teacher_event_group.teacher,
+                            "events": parent_events,
+                        },
+                    )
 
-                async_send_mail.delay(
-                    email_subject=f"Krankschreibung von {current.teacher_event_group.teacher.first_name} {current.teacher_event_group.teacher.last_name}",
-                    email_body=email_str_body,
-                    email_receiver=parent_obj.email,
-                )
+                    async_send_mail.delay(
+                        email_subject=f"Krankschreibung von {current.teacher_event_group.teacher.first_name} {current.teacher_event_group.teacher.last_name}",
+                        email_body=email_str_body,
+                        email_receiver=parent_obj.email,
+                    )
 
             for event in booked_events:
                 event.student.clear()
@@ -366,7 +367,12 @@ def updateBaseEventValidUntil(
         # ):
         #     instance.base_event.valid_until = instance.date + timezone.timedelta(days=7)
         #     instance.base_event.save()
-        newest = DayEventGroup.objects.all().order_by("date").last()
+        print(instance.base_event)
+        newest = (
+            DayEventGroup.objects.filter(base_event=instance.base_event)
+            .order_by("date")
+            .last()
+        )
         print(newest)
         instance.base_event.valid_until = newest.date + timezone.timedelta(days=7)
         instance.base_event.save()
