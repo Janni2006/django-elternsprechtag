@@ -39,6 +39,12 @@ def valid_custom_user_link(view_func):
 
         if up_user is not None and not parent_registration_link_deprecated(up_user):
             return view_func(request, user_token, key_token, *args, **kwargs)
+        elif up_user is not None and registration_link_is_debrecated:
+            return render(
+                request, "authentication/register_parent/link_deprecated.html"
+            )
+        else:
+            return render(request, "authentication/register_parent/link_error.html")
 
         return render(request, "authentication/register_parent/link_error.html")
 

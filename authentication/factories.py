@@ -10,7 +10,9 @@ class StudentFactory(DjangoModelFactory):
         model = Student
 
     shield_id = factory.Faker("bothify", text="????????????????????????????????")
-    child_email = factory.Faker("email")
+    child_email = factory.Sequence(
+        lambda n: f'{factory.Faker("username")}{n}@{factory.Faker("free_email_domain")}'
+    )
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
     class_name = factory.Faker("bothify", text="##?")
@@ -30,7 +32,9 @@ class ParentFactory(DjangoModelFactory):
 
     role = 0
     is_active = True
-    email = factory.Faker("email")
+    email = factory.Sequence(
+        lambda n: f'{factory.Faker("username")}{n}@{factory.Faker("free_email_domain")}'
+    )
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
 
@@ -53,4 +57,4 @@ class GroupFactory(DjangoModelFactory):
     class Meta:
         model = Group
 
-    name = factory.Faker("name")
+    name = factory.Sequence(lambda n: f'{factory.Faker("name")}{n}')
