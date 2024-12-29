@@ -195,7 +195,7 @@ class CustomRestore:
                     user.set_unusable_password()  # TODO: Hier sollte automatisch eine Reset Email an den Nutzer gesendet werden.
                     print("An unusable password was set")
 
-            user.groups.set(Group.objects.filter(pk__in=data["groups"]).all())
+            user.groups.set(Group.objects.filter(name__in=data["groups"]).all())
             user.user_permissions.set(
                 Permission.objects.filter(pk__in=data["permissions"])
             )
@@ -250,18 +250,30 @@ class CustomRestore:
         teacher_group: TeacherEventGroup,
         parent_formular: EventChangeFormula = None,
     ):
-        formular = EventChangeFormula.objects.create(
-            type=data["type"],
-            start_time=data["start_time"],
-            end_time=data["end_time"],
-            no_events=data["no_events"],
-            status=data["status"],
-            created_at=data["created_at"],
-            teacher_event_group=teacher_group,
-            day_group=teacher_group.day_group,
-            date=teacher_group.day_group.date,
-            teacher=teacher_group.teacher,
-        )
+        if data["no_events"]:
+            formular = EventChangeFormula.objects.create(
+                type=data["type"],
+                no_events=True,
+                status=data["status"],
+                created_at=data["created_at"],
+                teacher_event_group=teacher_group,
+                day_group=teacher_group.day_group,
+                date=teacher_group.day_group.date,
+                teacher=teacher_group.teacher,
+            )
+        else:
+            formular = EventChangeFormula.objects.create(
+                type=data["type"],
+                start_time=data["start_time"],
+                end_time=data["end_time"],
+                no_events=False,
+                status=data["status"],
+                created_at=data["created_at"],
+                teacher_event_group=teacher_group,
+                day_group=teacher_group.day_group,
+                date=teacher_group.day_group.date,
+                teacher=teacher_group.teacher,
+            )
 
         if parent_formular:
             formular.parent_formular = parent_formular

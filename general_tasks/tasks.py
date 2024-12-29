@@ -18,7 +18,7 @@ from dashboard.models import (
     DayEventGroup,
     TeacherEventGroup,
 )
-from authentication.models import StudentChange
+from authentication.models import StudentChange, Student, Upcomming_User
 from django.db.models import Q
 
 from .utils import EventPDFExport
@@ -252,3 +252,31 @@ def update_date_lead_status(self, *args, **kwargs):
     update_event_lead_status.delay(automatic=True)
 
     logger.debug("Finished updating lead status")
+
+
+@shared_task
+def check_douple_student_parent_relationships(*args, **kwargs):
+    for student in Student.objects.all():
+        try:
+            parent = CustomUser.objects.get(students=student)
+        except CustomUser.DoesNotExist:
+            up_user, created = Upcomming_User.objects.get_or_create(student=student)
+
+            if created:
+                logger.info(
+                    f"A new upcomming user was created for {student.first_name} {student.last_name}."
+                )
+
+        except CustomUser.MultipleObjectsReturned:
+            logger.error(
+                f"There are multiple parents registered for the student {student.first_name} {student.last_name}."
+            )
+
+        else:
+            up_user = Upcomming_User.objects.filter(student=student)
+            if up_user.exists():
+                logger.warning(
+                    f"A upcomming user object for {student.first_name} {student.last_name} remained in the database eventhough it should have been removed upon registration. It will be deleted now."
+                )
+
+                up_user.delete()

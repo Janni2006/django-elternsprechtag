@@ -139,3 +139,5 @@ emails
 temp/
 
 backup/
+
+.idea/

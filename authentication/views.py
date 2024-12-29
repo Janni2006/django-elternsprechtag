@@ -98,6 +98,7 @@ class RegistrationStartView(View):
                     "key_token": key_token,
                 },
             )
+        return render(request, "authentication/register_parent/link_error.html")
 
     def post(self, request, user_token, key_token, *args, **kwargs):
         try:
@@ -183,6 +184,7 @@ class RegistrationStartView(View):
                     "key_token": key_token,
                 },
             )
+        return render(request, "authentication/register_parent/link_error.html")
 
 
 @method_decorator(
@@ -207,53 +209,7 @@ class RegistrationResetView(View):
                 user_token=user_token,
                 key_token=key_token,
             )
-
-
-# #! Wahrscheinlich ist diese Funktion nicht länger benötigt
-# @method_decorator(
-#     [valid_custom_user_link, upcomming_user_otp_validated], name="dispatch"
-# )
-# class RegistrationAccountLinkChooseView(View):
-#     def get(self, request, user_token, key_token, *args, **kwargs):
-#         try:
-#             user_data = Upcomming_User.objects.get(
-#                 Q(user_token=user_token), Q(access_key=key_token)
-#             )
-#         except:
-#             user_data = None
-
-#         if user_data is not None and not parent_registration_link_deprecated(user_data):
-#             if not parent_registration_check_otp_verified(user_data):
-#                 return redirect(
-#                     "parent_check_otp",
-#                     user_token=user_token,
-#                     key_token=key_token,
-#                 )
-#             if not user_data.parent_email:
-#                 return redirect(
-#                     "parent_register",
-#                     user_token=user_token,
-#                     key_token=key_token,
-#                 )
-#             try:
-#                 existing_user = CustomUser.objects.get(email=user_data.parent_email)
-#             except CustomUser.DoesNotExist:
-#                 return redirect(
-#                     "parent_register",
-#                     user_token=user_token,
-#                     key_token=key_token,
-#                 )
-#             else:
-#                 if existing_user.role != 0:
-#                     messages.error(
-#                         request,
-#                         "Diese Email gehört zu einem Account, welcher nicht als Elternteil eingetragen ist. Es handelt sich wahrscheinlich um einen Lehreraccount. Bitte verwenden Sie eine andere Email-Adresse um einen Eltern Account zu erstellen.",
-#                     )
-#                     return redirect(
-#                         "parent_register",
-#                         user_token=user_token,
-#                         key_token=key_token,
-#                     )
+        return render(request, "authentication/register_parent/link_error.html")
 
 
 @method_decorator(
@@ -269,6 +225,7 @@ class RegistrationAccountLinkLoginView(
             )
         except:
             user_data = None
+            return render(request, "authentication/register_parent/link_error.html")
 
         if user_data is not None and not parent_registration_link_deprecated(user_data):
             if not parent_registration_check_otp_verified(user_data):
@@ -314,6 +271,10 @@ class RegistrationAccountLinkLoginView(
                         "key_token": key_token,
                     },
                 )
+        else:
+            return render(
+                request, "authentication/register_parent/link_deprecated.html"
+            )
 
     def post(self, request, user_token, key_token, *args, **kwargs):
         try:
@@ -322,6 +283,7 @@ class RegistrationAccountLinkLoginView(
             )
         except:
             user_data = None
+            return render(request, "authentication/register_parent/link_error.html")
 
         if user_data is not None and not parent_registration_link_deprecated(user_data):
             if not parent_registration_check_otp_verified(user_data):
@@ -382,6 +344,10 @@ class RegistrationAccountLinkLoginView(
                         "error": True,
                     },
                 )
+        else:
+            return render(
+                request, "authentication/register_parent/link_deprecated.html"
+            )
 
 
 @method_decorator(valid_custom_user_link, name="dispatch")
@@ -393,6 +359,7 @@ class RegistrationCheckOtpView(View):
             )
         except:
             user_data = None
+            return render(request, "authentication/register_parent/link_error.html")
 
         if user_data is not None:
             if parent_registration_check_otp_verified(user_data):
@@ -419,6 +386,7 @@ class RegistrationCheckOtpView(View):
             )
         except:
             user_data = None
+            return render(request, "authentication/register_parent/link_error.html")
 
         if user_data is not None:
             if parent_registration_check_otp_verified(user_data):
@@ -464,18 +432,20 @@ class ParentCreateAccountView(View):
             )
         except:
             up_user = None
-            print("No user")
-            print(
-                Upcomming_User.objects.filter(
-                    Q(user_token=user_token), Q(access_key=key_token)
-                )
-            )
-        print(
-            up_user is not None,
-            parent_registration_token.check_token(up_user, token),
-            up_user is not None
-            and parent_registration_token.check_token(up_user, token),
-        )
+            return render(request, "authentication/register_parent/link_error.html")
+
+        #     print("No user")
+        #     print(
+        #         Upcomming_User.objects.filter(
+        #             Q(user_token=user_token), Q(access_key=key_token)
+        #         )
+        #     )
+        # print(
+        #     up_user is not None,
+        #     parent_registration_token.check_token(up_user, token),
+        #     up_user is not None
+        #     and parent_registration_token.check_token(up_user, token),
+        # )
         if up_user is not None and parent_registration_token.check_token(
             up_user, token
         ):  # todo Hier muss noch überprüft werden, ob es bereits einen Nutzer mit der email gibt
@@ -504,6 +474,7 @@ class ParentCreateAccountView(View):
             )
         except:
             up_user = None
+            return render(request, "authentication/register_parent/link_error.html")
 
         if up_user is not None and parent_registration_token.check_token(
             up_user, token

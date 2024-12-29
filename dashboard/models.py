@@ -47,29 +47,6 @@ class BaseEventGroup(models.Model):
 
     valid_until = models.DateField(default=get_default_valid_until)
 
-    # LEAD_STATUS_CHOICES = (
-    #     (
-    #         0,
-    #         _("Nobody can currently request this appointment."),
-    #     ),  # No one is allowed to book this event
-    #     (
-    #         1,
-    #         _(
-    #             "Only parents with special authorisations can currently request this appointment."
-    #         ),  # Only parents with special treatment are currently allowed to book this event.
-    #     ),
-    #     (
-    #         2,
-    #         _(
-    #             "Only parents who have received a request from the teacher can currently request this appointment."
-    #         ),  # All parents who received an inquiry from this teacher are allowed to book this event.
-    #     ),
-    #     (
-    #         3,
-    #         _("All parents can request this appointment at the moment."),
-    #     ),  # All parents are allowed to book this event.
-    # )
-
     lead_status = models.IntegerField(choices=LeadStatusChoices, default=1)
 
     lead_status_last_change = models.DateTimeField(default=timezone.now)
@@ -112,19 +89,6 @@ class DayEventGroup(models.Model):
         ),
     )
 
-    # LEAD_STATUS_CHOICES = (
-    #     (0, "Nobody can currently request this appointment."),
-    #     (
-    #         1,
-    #         "Only parents with special authorisations can currently request this appointment.",
-    #     ),
-    #     (
-    #         2,
-    #         "Only parents who have received a request from the teacher can currently request this appointment.",
-    #     ),
-    #     (3, "All parents can request this appointment at the moment."),
-    # )
-
     lead_status = models.IntegerField(choices=LeadStatusChoices, default=1)
 
     lead_status_last_change = models.DateTimeField(default=timezone.now)
@@ -163,19 +127,6 @@ class TeacherEventGroup(models.Model):
     lead_end_timedelta = models.DurationField(default=timezone.timedelta(hours=1))
     lead_allow_same_day = models.BooleanField(default=True)
 
-    # LEAD_STATUS_CHOICES = (
-    #     (0, "Nobody can currently request this appointment."),
-    #     (
-    #         1,
-    #         "Only parents with special authorisations can currently request this appointment.",
-    #     ),
-    #     (
-    #         2,
-    #         "Only parents who have received a request from the teacher can currently request this appointment.",
-    #     ),
-    #     (3, "All parents can request this appointment at the moment."),
-    # )
-
     lead_status = models.IntegerField(choices=LeadStatusChoices, default=1)
 
     lead_status_last_change = models.DateTimeField(default=timezone.now)
@@ -195,9 +146,6 @@ class TeacherEventGroup(models.Model):
 
 
 class Event(models.Model):  # Termin
-    # identifier für diesen speziellen Termin
-    # id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    # id_uuid = models.UUIDField(default=uuid.uuid4, editable=False)
     base_event = models.ForeignKey(BaseEventGroup, on_delete=models.CASCADE, null=True)
     day_group = models.ForeignKey(DayEventGroup, on_delete=models.CASCADE, null=True)
     teacher = models.ForeignKey(
@@ -515,10 +463,6 @@ class Inquiry(models.Model):
             "Request for confirmation of an appointment (parent->teacher)"
         )
 
-    # CHOICES_INQUIRYTYPE = (
-    #     (0, _("Inquiry to book an appointment (teacher->parents)")),
-    #     (1, _("Request for confirmation of an appointment (parent->teacher)")),
-    # )
     base_event = models.ForeignKey(BaseEventGroup, on_delete=models.CASCADE, null=True)
     type = models.IntegerField(
         choices=InquiryTypeChoices, default=InquiryTypeChoices.TEACHER_REQUEST
@@ -547,11 +491,6 @@ class Inquiry(models.Model):
         ACCEPTED = 1, _("Inquiry accepted")
         DECLINED = 3, _("Inquiry declined")
 
-    # REACTION_CHOICES = (
-    #     (0, _("No response")),  # No response
-    #     (1, _("Inquiry accepted")),  # Inquiry accepted
-    #     (3, _("Inquiry declined")),  # Inquiry dismissed
-    # )
     respondent_reaction = models.IntegerField(
         choices=InquiryReactionChoices, default=InquiryReactionChoices.NO_RESPONSE
     )
@@ -569,11 +508,6 @@ class Announcements(models.Model):
         APPOINTEMENT_CANCELLATION = 1, _("Appointment cancellation")
         SYSTEM_NOTIFICATION = 2, _("System notification")
 
-    # TYPE_CHOICES = (
-    #     (0, _("New booking inquiry")),
-    #     (1, _("Appointment cancellation")),
-    #     (2, _("System notification")),
-    # )
     announcement_type = models.IntegerField(
         choices=AnnouncementTypeChoices, default=AnnouncementTypeChoices.BOOKINK_INQUIRY
     )

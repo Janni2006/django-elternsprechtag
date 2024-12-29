@@ -78,13 +78,13 @@
                                                 </div>
 
                                                 <!-- Muss über JS gemacht werden, da das Feld grundsätzlich existent sein muss. -->
-                                                <script>
+                                                {% comment %} <script>
                                                     var el = document.getElementById("base_event");
 
                                                     if ("{{ choices_count }}" <= 1) {
                                                         el.classList += "d-none"
                                                     }
-                                                </script>
+                                                </script> {% endcomment %}
 
                                                 <div class="mb-2">
                                                     <strong>{% translate 'Reason for the inquiry:' %} </strong>
