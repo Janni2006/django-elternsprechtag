@@ -2,7 +2,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models import Q
 
-from dashboard.models import Inquiry, Event
+from events.models import Inquiry, Event
 
 
 @receiver(post_save, sender=Inquiry)

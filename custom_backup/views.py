@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from dashboard.models import *
+from events.models import *
 from authentication.models import *
 from django.views.generic import FormView
 from django.urls import reverse_lazy

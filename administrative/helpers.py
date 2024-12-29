@@ -38,7 +38,7 @@ from general_tasks.tasks import async_send_mail
 
 from django.contrib.admin.views.decorators import staff_member_required
 
-from dashboard.models import (
+from events.models import (
     Event,
     EventChangeFormula,
     Announcements,

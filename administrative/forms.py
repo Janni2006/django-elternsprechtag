@@ -10,7 +10,7 @@ from django.utils.translation import gettext as _
 from .models import *
 from dashboard.models import SiteSettings
 from authentication.models import Student, CustomUser, StudentChange
-from dashboard.models import (
+from events.models import (
     EventChangeFormula,
     Event,
     DayEventGroup,

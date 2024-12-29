@@ -39,7 +39,7 @@ from general_tasks.tasks import async_send_mail
 from django.urls import reverse_lazy
 from django.contrib.admin.views.decorators import staff_member_required
 
-from dashboard.models import Event, EventChangeFormula
+from events.models import Event, EventChangeFormula
 from dashboard.tasks import async_create_events_special, apply_event_change_formular
 
 from django_tables2 import SingleTableView

@@ -1,13 +1,20 @@
 import django_filters
-from dashboard.models import Event, LeadStatusChoices, BaseEventGroup
 from authentication.models import CustomUser
 from crispy_forms.helper import FormHelper, Layout
 from crispy_forms.layout import Submit
-from dashboard.models import BaseEventGroup, Event, TeacherEventGroup, DayEventGroup
+from events.models import (
+    BaseEventGroup,
+    Event,
+    TeacherEventGroup,
+    DayEventGroup,
+    LeadStatusChoices,
+)
 from authentication.models import Student
 from django.utils import timezone
 from django import forms
 from custom_backup.models import *
+
+from events.choices import EventStatusChoices
 
 from django_select2 import forms as s2forms
 
@@ -45,7 +52,7 @@ class EventFilter(django_filters.FilterSet):
     )
 
     status = django_filters.MultipleChoiceFilter(
-        choices=Event.StatusChoices,
+        choices=EventStatusChoices,
         widget=forms.CheckboxSelectMultiple(),
         label="",
     )
@@ -71,7 +78,7 @@ class TeacherEventGroupFilter(django_filters.FilterSet):
     )
 
     # status = django_filters.MultipleChoiceFilter(
-    #     choices=Event.StatusChoices,
+    #     choices=EventStatusChoices,
     #     widget=forms.CheckboxSelectMultiple(),
     #     label="",
     # )

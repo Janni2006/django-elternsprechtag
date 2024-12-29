@@ -1,4 +1,4 @@
-from dashboard.models import Student, Event
+from events.models import Student, Event
 
 
 def get_students_choices_for_event(event: Event):

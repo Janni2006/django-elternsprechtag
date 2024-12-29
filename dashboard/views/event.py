@@ -1,7 +1,8 @@
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from authentication.models import CustomUser, TeacherExtraData, Student, Tag
-from ..models import Event, Inquiry, SiteSettings, Announcements, DayEventGroup
+from events.models import Event, Inquiry, SiteSettings, Announcements, DayEventGroup
+from events.choices import PersonalEventStatusChoices
 from django.db.models import Q
 from django.core.paginator import Paginator
 from django.utils import timezone
@@ -102,7 +103,7 @@ class bookEventView(View):
                 urlsafe_base64_encode(force_bytes(event.teacher.id)),
             )
 
-        if reason == event.PersonalEventStatusChoices.TIME_CONFLICT_FOLLOWUP:
+        if reason == PersonalEventStatusChoices.TIME_CONFLICT_FOLLOWUP:
             follow_up_event = True
         else:
             follow_up_event = False
@@ -172,7 +173,7 @@ class bookEventView(View):
                 urlsafe_base64_encode(force_bytes(event.teacher.id)),
             )
 
-        if reason == event.PersonalEventStatusChoices.TIME_CONFLICT_FOLLOWUP:
+        if reason == PersonalEventStatusChoices.TIME_CONFLICT_FOLLOWUP:
             follow_up_event = True
         else:
             follow_up_event = False

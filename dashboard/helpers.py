@@ -2,7 +2,9 @@ from django.db.models import Q
 from django.utils import timezone
 from .utils import *
 import pytz
-from .models import Inquiry, Event, CustomUser, SiteSettings
+from authentication.models import CustomUser
+from events.models import Inquiry, Event, SiteSettings
+from events.choices import PersonalEventStatusChoices
 
 
 def create_event_date_dict(events):
@@ -46,14 +48,14 @@ def event_date_dict_add_book_information(parent: CustomUser, event_dict: dict):
             event_dict[date][index].bookable = bookable
 
             match reason:
-                case event.PersonalEventStatusChoices.INQUIRY_PENDING:
+                case PersonalEventStatusChoices.INQUIRY_PENDING:
                     event_dict[date][index].inquiry_pending = True
-                case event.PersonalEventStatusChoices.BOOKED:
+                case PersonalEventStatusChoices.BOOKED:
                     event_dict[date][index].booked = True
-                case event.PersonalEventStatusChoices.OCCUPIED:
+                case PersonalEventStatusChoices.OCCUPIED:
                     event_dict[date][index].occupied = True
-                case event.PersonalEventStatusChoices.TIME_CONFLICT:
+                case PersonalEventStatusChoices.TIME_CONFLICT:
                     event_dict[date][index].time_conflict = True
-                case event.PersonalEventStatusChoices.TIME_CONFLICT_FOLLOWUP:
+                case PersonalEventStatusChoices.TIME_CONFLICT_FOLLOWUP:
                     event_dict[date][index].time_conflict_followup = True
     return event_dict

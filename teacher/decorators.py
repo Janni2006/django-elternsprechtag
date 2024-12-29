@@ -4,9 +4,9 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q
 
-from dashboard.models import SiteSettings, Inquiry, Event
+from events.models import SiteSettings, Inquiry, Event
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from dashboard.models import BaseEventGroup
+from events.models import BaseEventGroup
 
 
 def teacher_required(view_func):

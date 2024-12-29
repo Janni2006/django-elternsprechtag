@@ -1,6 +1,6 @@
 from typing import Any
 from django import forms
-from .models import (
+from events.models import (
     Student,
     Inquiry,
     SiteSettings,

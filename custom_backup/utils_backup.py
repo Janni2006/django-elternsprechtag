@@ -1,4 +1,4 @@
-from dashboard.models import *
+from events.models import *
 from authentication.models import *
 from django.contrib.auth.models import Group, Permission
 import logging

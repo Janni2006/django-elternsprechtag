@@ -30,7 +30,7 @@ from .tables import *
 from django_tables2 import SingleTableView
 from general_tasks.tasks import async_send_mail
 
-from dashboard.models import Event, EventChangeFormula
+from events.models import Event, EventChangeFormula
 from dashboard.tasks import async_create_events_special
 
 import csv, io, os

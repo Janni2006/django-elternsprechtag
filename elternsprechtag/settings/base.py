@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "colorfield",
     "administrative",
     "custom_backup",
+    "events",
     "rules.apps.AutodiscoverRulesConfig",
 ]
 

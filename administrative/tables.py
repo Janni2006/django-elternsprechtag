@@ -1,7 +1,7 @@
 import django_tables2 as tables
 from django_tables2.utils import Accessor
 from authentication.models import Student, StudentChange, CustomUser, Tag
-from dashboard.models import (
+from events.models import (
     Event,
     EventChangeFormula,
     BaseEventGroup,

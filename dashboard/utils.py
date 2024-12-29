@@ -1,4 +1,4 @@
-from .models import (
+from events.models import (
     Inquiry,
     Event,
     CustomUser,

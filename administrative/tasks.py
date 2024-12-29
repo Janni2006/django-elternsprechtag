@@ -5,7 +5,7 @@ from celery_progress.backend import ProgressRecorder
 from django.utils import timezone
 from django.db.models import Q
 from authentication.utils import register_new_teacher
-from dashboard.models import Event, BaseEventGroup, TeacherEventGroup, DayEventGroup
+from events.models import Event, BaseEventGroup, TeacherEventGroup, DayEventGroup
 from authentication.models import Upcomming_User
 from .utils import student_send_registration_mail
 

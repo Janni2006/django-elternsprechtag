@@ -1,5 +1,5 @@
 from authentication.models import CustomUser
-from dashboard.models import Event
+from events.models import Event
 from django.db.models import Q
 import pytz
 

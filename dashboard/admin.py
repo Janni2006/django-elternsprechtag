@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.http import HttpRequest
 from django.http.response import HttpResponse
 from authentication.models import CustomUser
-from .models import (
+from events.models import (
     Event,
     Inquiry,
     SiteSettings,

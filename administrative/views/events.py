@@ -37,9 +37,11 @@ from django_tables2 import SingleTableView, SingleTableMixin
 from django_filters.views import FilterView
 from general_tasks.tasks import async_send_mail
 
+from events.choices import EventStatusChoices
+
 from django.contrib.admin.views.decorators import staff_member_required
 
-from dashboard.models import (
+from events.models import (
     Event,
     EventChangeFormula,
     Announcements,
@@ -473,11 +475,11 @@ class BaseEventDetailView(View):
         events = Event.objects.filter(base_event=base_event)
 
         booking_statistics = {
-            "labels": Event.StatusChoices.labels,
+            "labels": EventStatusChoices.labels,
             "data": [
-                events.filter(status=Event.StatusChoices.UNOCCUPIED).count(),
-                events.filter(status=Event.StatusChoices.OCCUPIED).count(),
-                events.filter(status=Event.StatusChoices.INQUIRY).count(),
+                events.filter(status=EventStatusChoices.UNOCCUPIED).count(),
+                events.filter(status=EventStatusChoices.OCCUPIED).count(),
+                events.filter(status=EventStatusChoices.INQUIRY).count(),
             ],
         }
 
@@ -597,7 +599,9 @@ class BaseEventEditLeadDateView(View):
 
 
 @method_decorator(login_staff, name="dispatch")
-@method_decorator(permission_required("dashboard.view_teachereventgroup"), name="dispatch")
+@method_decorator(
+    permission_required("dashboard.view_teachereventgroup"), name="dispatch"
+)
 class TeacherDayEventGroupView(SingleTableMixin, FilterView):
     table_class = TeacherDayGroupTable
     template_name = (
@@ -628,7 +632,9 @@ class TeacherDayEventGroupView(SingleTableMixin, FilterView):
 
 
 @method_decorator(login_staff, name="dispatch")
-@method_decorator(permission_required("dashboard.view_teachereventgroup"), name="dispatch")
+@method_decorator(
+    permission_required("dashboard.view_teachereventgroup"), name="dispatch"
+)
 class TeacherDayGroupDetailView(View):
     def get(self, request, base_event_pk, pk):
         base_event = get_object_or_404(BaseEventGroup, pk=base_event_pk)
@@ -646,11 +652,11 @@ class TeacherDayGroupDetailView(View):
         events = Event.objects.filter(teacher_event_group=teacher_event_group)
 
         booking_statistics = {
-            "labels": Event.StatusChoices.labels,
+            "labels": EventStatusChoices.labels,
             "data": [
-                events.filter(status=Event.StatusChoices.UNOCCUPIED).count(),
-                events.filter(status=Event.StatusChoices.OCCUPIED).count(),
-                events.filter(status=Event.StatusChoices.INQUIRY).count(),
+                events.filter(status=EventStatusChoices.UNOCCUPIED).count(),
+                events.filter(status=EventStatusChoices.OCCUPIED).count(),
+                events.filter(status=EventStatusChoices.INQUIRY).count(),
             ],
         }
 
@@ -695,7 +701,9 @@ class TeacherDayGroupDetailView(View):
 
 
 @method_decorator(login_staff, name="dispatch")
-@method_decorator(permission_required("dashboard.change_teachereventgroup"), name="dispatch")
+@method_decorator(
+    permission_required("dashboard.change_teachereventgroup"), name="dispatch"
+)
 class TeacherDayGroupEditLeadStatusView(View):
     def get(self, request, base_event_pk, pk):
         base_event = get_object_or_404(BaseEventGroup, pk=base_event_pk)
@@ -748,7 +756,9 @@ class TeacherDayGroupEditLeadStatusView(View):
 
 
 @method_decorator(login_staff, name="dispatch")
-@method_decorator(permission_required("dashboard.change_teachereventgroup"), name="dispatch")
+@method_decorator(
+    permission_required("dashboard.change_teachereventgroup"), name="dispatch"
+)
 class TeacherDayGroupEditLeadDateView(View):
     def get(self, request, base_event_pk, pk):
         base_event = get_object_or_404(BaseEventGroup, pk=base_event_pk)

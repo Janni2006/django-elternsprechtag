@@ -1,6 +1,6 @@
 from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
-from .models import (
+from events.models import (
     Event,
     Inquiry,
     Announcements,
@@ -21,6 +21,8 @@ import datetime
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.encoding import force_str, force_bytes
 from .utils import check_inquiry_reopen
+
+from events.choices import EventStatusChoices, EventFormularStatusChoices
 
 
 @receiver(post_save, sender=Event)
@@ -209,9 +211,8 @@ def openNewEventChangeFormulaOnDisapprove(sender, instance, *args, **kwargs):
         previouse = EventChangeFormula.objects.get(id=instance.id)
 
         if (
-            previouse.status
-            == EventChangeFormula.FormularStatusChoices.PENDING_CONFIRMATION
-            and current.status == EventChangeFormula.FormularStatusChoices.DECLINED
+            previouse.status == EventFormularStatusChoices.PENDING_CONFIRMATION
+            and current.status == EventFormularStatusChoices.DECLINED
             and current.type == EventChangeFormula.FormularTypeChoices.TIME_PERIODS
         ):
             EventChangeFormula.objects.create(
@@ -222,7 +223,7 @@ def openNewEventChangeFormulaOnDisapprove(sender, instance, *args, **kwargs):
             )
 
             previouse.childformular.all().update(
-                status=EventChangeFormula.FormularStatusChoices.DECLINED
+                status=EventFormularStatusChoices.DECLINED
             )
 
 
@@ -235,9 +236,8 @@ def apply_break_formulars(sender, instance, *args, **kwargs):
         previouse = EventChangeFormula.objects.get(id=instance.id)
 
         if (
-            previouse.status
-            == EventChangeFormula.FormularStatusChoices.PENDING_CONFIRMATION
-            and current.status == EventChangeFormula.FormularStatusChoices.APPROVED
+            previouse.status == EventFormularStatusChoices.PENDING_CONFIRMATION
+            and current.status == EventFormularStatusChoices.APPROVED
             and current.type == EventChangeFormula.FormularTypeChoices.BREAKS
         ):
             events = Event.objects.filter(
@@ -252,7 +252,7 @@ def apply_break_formulars(sender, instance, *args, **kwargs):
                         previouse.date, previouse.end_time
                     )
                 ),
-                Q(status=Event.StatusChoices.UNOCCUPIED),
+                Q(status=EventStatusChoices.UNOCCUPIED),
             )
 
             events.update(
@@ -272,9 +272,8 @@ def apply_sick_leave_formulars(sender, instance, *args, **kwargs):
         previouse = EventChangeFormula.objects.get(id=instance.id)
 
         if (
-            previouse.status
-            == EventChangeFormula.FormularStatusChoices.PENDING_CONFIRMATION
-            and current.status == EventChangeFormula.FormularStatusChoices.APPROVED
+            previouse.status == EventFormularStatusChoices.PENDING_CONFIRMATION
+            and current.status == EventFormularStatusChoices.APPROVED
             and current.type == EventChangeFormula.FormularTypeChoices.ILLNESS
         ):
             if current.no_events:
@@ -306,7 +305,7 @@ def apply_sick_leave_formulars(sender, instance, *args, **kwargs):
                 lead_status_last_change=timezone.now(),
             )
 
-            booked_events = events.exclude(status=Event.StatusChoices.UNOCCUPIED)
+            booked_events = events.exclude(status=EventStatusChoices.UNOCCUPIED)
 
             parents = list(set(list(booked_events.values_list("parent", flat=True))))
 
@@ -333,7 +332,7 @@ def apply_sick_leave_formulars(sender, instance, *args, **kwargs):
             for event in booked_events:
                 event.student.clear()
 
-                event.status = Event.StatusChoices.UNOCCUPIED
+                event.status = EventStatusChoices.UNOCCUPIED
                 event.parent = None
                 event.occupied = False
 

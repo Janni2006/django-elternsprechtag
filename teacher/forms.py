@@ -1,7 +1,7 @@
 from dataclasses import field
 from django import forms
 from django.db.models import Q
-from dashboard.models import (
+from events.models import (
     Student,
     Event,
     EventChangeFormula,
@@ -17,6 +17,7 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.db.models import F
 from .helpers import AbsoluteDifference
+from events.choices import EventFormularStatusChoices
 
 
 class createInquiryForm(forms.Form):
@@ -226,7 +227,7 @@ class EventChangeFormulaBreakForm(forms.ModelForm):
         time_start = data.get("start_time")
         time_end = data.get("end_time")
 
-        instance.status = EventChangeFormula.FormularStatusChoices.PENDING_CONFIRMATION
+        instance.status = EventFormularStatusChoices.PENDING_CONFIRMATION
         instance.type = EventChangeFormula.FormularTypeChoices.BREAKS
         instance.start_time = time_start
         instance.end_time = time_end
@@ -314,7 +315,7 @@ class SickLeaveForm(forms.ModelForm):
         instance.no_events = self.cleaned_data["no_events"]
         instance.created_at = timezone.now()
 
-        instance.status = EventChangeFormula.FormularStatusChoices.PENDING_CONFIRMATION
+        instance.status = EventFormularStatusChoices.PENDING_CONFIRMATION
 
         if commit:
             instance.save()

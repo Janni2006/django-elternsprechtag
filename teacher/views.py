@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from authentication.models import CustomUser
-from dashboard.models import (
+from events.models import (
     Inquiry,
     Student,
     Event,
@@ -43,6 +43,8 @@ from dashboard.utils import check_inquiry_reopen
 
 import logging
 import operator
+
+from events.choices import EventStatusChoices, EventFormularStatusChoices
 
 
 teacher_decorators = [login_required, teacher_required]
@@ -835,7 +837,7 @@ def viewMyEvents(request):
             #             timezone.datetime.strptime("23:59:59", "%H:%M:%S").time(),
             #         )
             #     ),
-            #     ~Q(status=Event.StatusChoices.OCCUPIED),
+            #     ~Q(status=EventStatusChoices.OCCUPIED),
             # ).count(),
             # "occupied_events": Event.objects.filter(
             #     Q(teacher=teacher),
@@ -851,7 +853,7 @@ def viewMyEvents(request):
             #             timezone.datetime.strptime("23:59:59", "%H:%M:%S").time(),
             #         )
             #     ),
-            #     Q(status=Event.StatusChoices.OCCUPIED),
+            #     Q(status=EventStatusChoices.OCCUPIED),
             #     ~Q(lead_status=LeadStatusChoices.NOBODY),
             # ).count(),
             # "occupied_percent": int(
@@ -874,7 +876,7 @@ def viewMyEvents(request):
             #                     ).time(),
             #                 )
             #             ),
-            #             Q(status=Event.StatusChoices.OCCUPIED),
+            #             Q(status=EventStatusChoices.OCCUPIED),
             #             ~Q(lead_status=LeadStatusChoices.NOBODY),
             #         ).count()
             #         / Event.objects.filter(
@@ -930,7 +932,7 @@ def viewMyEvents(request):
                 Event.objects.filter(
                     Q(teacher=teacher),
                     Q(start__gte=timezone.now()),
-                    Q(status=Event.StatusChoices.OCCUPIED),
+                    Q(status=EventStatusChoices.OCCUPIED),
                     ~Q(lead_status=LeadStatusChoices.NOBODY),
                 ).count()
                 / Event.objects.filter(
@@ -963,12 +965,12 @@ def viewMyEvents(request):
                 "free_events": Event.objects.filter(
                     Q(teacher=teacher),
                     Q(start__gte=timezone.now()),
-                    ~Q(status=Event.StatusChoices.OCCUPIED),
+                    ~Q(status=EventStatusChoices.OCCUPIED),
                 ).count(),
                 "occupied_events": Event.objects.filter(
                     Q(teacher=teacher),
                     Q(start__gte=timezone.now()),
-                    Q(status=Event.StatusChoices.OCCUPIED),
+                    Q(status=EventStatusChoices.OCCUPIED),
                     ~Q(lead_status=LeadStatusChoices.NOBODY),
                 ).count(),
                 "occupied_percent": occupied_percent,
@@ -1119,7 +1121,7 @@ class EventBreakRequestView(View):
                 Q(end__lte=end_datetime),
             )
 
-            if not Event.StatusChoices.UNOCCUPIED in events.values_list(
+            if not EventStatusChoices.UNOCCUPIED in events.values_list(
                 "status", flat=True
             ):
                 messages.error(
@@ -1139,11 +1141,9 @@ class EventBreakRequestView(View):
                 )
                 return redirect("teacher_personal_events")
 
-            if Event.StatusChoices.INQUIRY in events.values_list(
+            if EventStatusChoices.INQUIRY in events.values_list(
                 "status", flat=True
-            ) or Event.StatusChoices.OCCUPIED in events.values_list(
-                "status", flat=True
-            ):
+            ) or EventStatusChoices.OCCUPIED in events.values_list("status", flat=True):
                 messages.info(
                     request,
                     _(
@@ -1159,7 +1159,7 @@ class EventBreakRequestView(View):
                 date=teacher_group.day_group.date,
                 start_time=start_time,
                 end_time=end_time,
-                status=EventChangeFormula.FormularStatusChoices.PENDING_CONFIRMATION,
+                status=EventFormularStatusChoicesRMATION,
             )
             formular.save()
 
@@ -1180,7 +1180,7 @@ class EventBreakForEventRequestView(View):
     def get(self, request, event_pk):
         event = get_object_or_404(Event, teacher=request.user, pk=event_pk)
 
-        if not event.status == Event.StatusChoices.UNOCCUPIED:
+        if not event.status == EventStatusChoices.UNOCCUPIED:
             messages.error(
                 request,
                 "This event is already occupied. If you want to set your break to this event anyways please get in touch with the system operators.",
@@ -1203,7 +1203,7 @@ class EventBreakForEventRequestView(View):
                 date=event.day_group.date,
                 start_time=event.start.astimezone(),
                 end_time=event.end.astimezone(),
-                status=EventChangeFormula.FormularStatusChoices.PENDING_CONFIRMATION,
+                status=EventFormularStatusChoices.PENDING_CONFIRMATION,
             )
             formular.save()
 
@@ -1282,7 +1282,7 @@ class DeleteEventFormularView(View):
 
         print(formular)
 
-        formular.status = EventChangeFormula.FormularStatusChoices.REMOVED
+        formular.status = EventFormularStatusChoices.REMOVED
         formular.save()
 
         messages.success(request, "Formular was successfully removed.")

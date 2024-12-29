@@ -7,7 +7,7 @@ from celery import shared_task
 from django.conf import settings
 from authentication.models import CustomUser
 from django.template.loader import render_to_string
-from dashboard.models import (
+from events.models import (
     Event,
     Inquiry,
     SiteSettings,
