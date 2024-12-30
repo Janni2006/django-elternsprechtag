@@ -398,18 +398,18 @@ class EventChangeFormula(models.Model):
         ]
 
 
-class EventLogsMainAttributes(models.Model):
-    created = models.DateTimeField(auto_now_add=True, editable=False)
+# class EventLogsMainAttributes(models.Model):
+#     log_type = models.IntegerField(
+#         choices=EventLogsTypeChoices, default=EventLogsTypeChoices.UPDATED
+#     )
+#     created = models.DateTimeField(auto_now_add=True, editable=False)
 
-    class Meta:
-        abstract = True
+#     class Meta:
+#         abstract = True
 
 
-class EventChangeLogs(EventLogsMainAttributes):
-    changed_event = models.ForeignKey(Event, on_delete=models.CASCADE)
-    changed_teacher_event_group = models.ForeignKey(
-        TeacherEventGroup, on_delete=models.CASCADE, null=True, blank=True
-    )
-    changes_day_event_group = models.ForeignKey(
-        DayEventGroup, on_delete=models.CASCADE, null=True, blank=True
-    )
+# class EventChangeLogs(EventLogsMainAttributes):
+#     changed_event = models.ForeignKey(Event, on_delete=models.CASCADE)
+#     change_action = models.IntegerField(
+#         choices=EventLogsActionsCoices, default=EventLogsActionsCoices.CHANGE
+#     )

@@ -1,5 +1,7 @@
-from .models import *
+from .models import Event
 from .choices import *
+
+from authentication.models import CustomUser
 
 
 def cancel_event(event: Event, reopen=True):

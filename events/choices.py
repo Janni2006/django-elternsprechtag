@@ -34,6 +34,19 @@ class EventFormularTypeChoices(models.IntegerChoices):
     ILLNESS = 2, _("Sick leave")
 
 
+class EventLogsTypeChoices(models.IntegerChoices):
+    CREATED = 0, _("Created")
+    UPDATED = 1, _("Changed")
+    DELETED = 2, _("Deleted")
+
+
+class EventLogsActionsCoices(models.IntegerChoices):
+    REQUEST = 0, _("Inquiry created")
+    BOOK = 1, _("Booked")
+    CANCELED = 2, _("Canceled")
+    CHANGE = 3, _("Some field was changed")
+
+
 class PersonalEventStatusChoices:
     EVENT_BOOKABLE = 0, _("Event bookable")
     INQUIRY_PENDING = 1, _("Inquiry pending")

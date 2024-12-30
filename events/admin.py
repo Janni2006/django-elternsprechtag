@@ -82,8 +82,77 @@ class BaseEventGroupAdmin(admin.ModelAdmin):
     model = BaseEventGroup
     inlines = [DayEventGroupInlineAdmin]
 
+    list_display = (
+        "__str__",
+        "lead_status",
+        "lead_start",
+        "lead_inquiry_start",
+        "valid_until",
+        "active",
+    )
+
     fieldsets = (
         (None, {"fields": ("active",)}),
+        (
+            _("Lead"),
+            {
+                "fields": (
+                    "lead_status",
+                    (
+                        "lead_start",
+                        "lead_inquiry_start",
+                    ),
+                    "lead_status_last_change",
+                    (
+                        "lead_manual_override",
+                        "disable_automatic_changes",
+                    ),
+                    (
+                        "manual_apply",
+                        "force",
+                    ),
+                ),
+                "classes": ["collapse"],
+            },
+        ),
+        (
+            _("General"),
+            {
+                "fields": (
+                    "updated",
+                    "created",
+                ),
+                "classes": ["collapse"],
+            },
+        ),
+    )
+
+    readonly_fields = ["updated", "created", "lead_status_last_change"]
+
+
+class TeacherEventGroupAdmin(admin.ModelAdmin):
+    model = TeacherEventGroup
+
+    list_display = (
+        "__str__",
+        "lead_status",
+        "lead_start",
+        "lead_inquiry_start",
+        "room",
+        "active",
+    )
+
+    fieldsets = (
+        (
+            None,
+            {
+                "fields": (
+                    "active",
+                    "teacher",
+                    "room",
+                )
+            },
+        ),
         (
             _("Lead"),
             {
@@ -128,10 +197,15 @@ class EventAdmin(admin.ModelAdmin):
         "end",
         "status",
         "lead_status",
+        "active",
     )
-    search_fields = ("teacher__first_name", "teacher__last_name", "teacher__email")
+    search_fields = (
+        "teacher__first_name",
+        "teacher__last_name",
+        "teacher__email",
+    )
     change_list_template = "dashboard/admin/events.html"
-    list_filter = ("occupied", "status", "lead_status", "day_group")
+    list_filter = ("occupied", "status", "lead_status", "day_group", "active")
 
     # TODO: Hier muss noch die Möglichkeit hinzugefügt werden über das Admin Portal ein Event zu erstellen. Dies ist derzeit nur in mehreren Schritten möglich.
 
@@ -411,5 +485,5 @@ class EventChangeFormulaAdmin(admin.ModelAdmin):
 admin.site.register(Event, EventAdmin)
 admin.site.register(Inquiry, InquiryAdmin)
 admin.site.register(EventChangeFormula, EventChangeFormulaAdmin)
-admin.site.register(TeacherEventGroup)
+admin.site.register(TeacherEventGroup, TeacherEventGroupAdmin)
 admin.site.register(BaseEventGroup, BaseEventGroupAdmin)
