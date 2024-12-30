@@ -15,6 +15,11 @@ from dashboard.models import SiteSettings
 
 from .choices import *
 from .rules import *
+from .helpers import (
+    check_time_conflict,
+    check_follow_up_event_exists,
+    check_time_conflict_follow_up,
+)
 
 from rules.contrib.models import RulesModel
 
@@ -31,7 +36,7 @@ class EventMainAttributes(RulesModel):
         ),
     )
 
-    lead_status_last_change = models.DateTimeField(auto_now_add=True)
+    lead_status_last_change = models.DateTimeField(default=timezone.now)
 
     lead_manual_override = models.BooleanField(default=False)
 
@@ -96,7 +101,7 @@ class BaseEventGroup(EventGroupMainAttributes):
 
 class DayEventGroup(EventGroupMainAttributes):
     base_event = models.ForeignKey(BaseEventGroup, on_delete=models.CASCADE, null=True)
-    date = models.DateField(auto_now_add=True)
+    date = models.DateField(default=timezone.now)
 
     def __str__(self):
         return f"Event group - {str(self.date)}"
@@ -186,7 +191,10 @@ class Event(EventMainAttributes):
                 return True
             case LeadStatusChoices.INQUIRY:
                 if Inquiry.objects.filter(
-                    Q(requester=self.teacher), Q(respondent=parent), Q(processed=False)
+                    Q(requester=self.teacher),
+                    Q(respondent=parent),
+                    Q(processed=False),
+                    Q(base_event=self.get_base_event()),
                 ).exists():
                     return True
             case LeadStatusChoices.CONDITION:
@@ -198,66 +206,30 @@ class Event(EventMainAttributes):
 
     def get_parent_event_individual_status(self, parent: CustomUser):
         match self.status:
-            case self.StatusChoices.OCCUPIED:
+            case EventStatusChoices.OCCUPIED:
                 if self.parent == parent:
                     return True, PersonalEventStatusChoices.BOOKED
                 else:
                     return False, PersonalEventStatusChoices.OCCUPIED
-            case self.StatusChoices.INQUIRY:
+            case EventStatusChoices.INQUIRY:
                 if self.parent == parent:
                     return True, PersonalEventStatusChoices.INQUIRY_PENDING
                 else:
                     return False, PersonalEventStatusChoices.OCCUPIED
-            case self.StatusChoices.UNOCCUPIED:
-                match self.lead_status:
-                    case LeadStatusChoices.NOBODY:
-                        return False, PersonalEventStatusChoices.BLOCKED
-                    case LeadStatusChoices.CONDITION:
-                        if parent.has_perm("dashboard.condition_prebook_event"):
-                            return True, PersonalEventStatusChoices.EVENT_BOOKABLE
-                        else:
-                            return False, PersonalEventStatusChoices.BLOCKED
-                    case LeadStatusChoices.INQUIRY:
-                        if Inquiry.objects.filter(
-                            Q(respondent=parent),
-                            Q(processed=False),
-                            Q(base_event=self.get_base_event()),
-                        ).exists():
-                            return True, PersonalEventStatusChoices.EVENT_BOOKABLE
-                        else:
-                            return False, PersonalEventStatusChoices.BLOCKED
-                    case LeadStatusChoices.ALL:
-                        min_event_seperation = (
-                            SiteSettings.objects.first().min_event_seperation
-                        )
-                        if (
-                            Event.objects.filter(Q(parent=parent))
-                            .exclude(end__lte=self.start)
-                            .exclude(start__gte=self.end)
-                            .exists()
-                        ):
-                            return False, PersonalEventStatusChoices.TIME_CONFLICT
-                        elif (
-                            Event.objects.filter(Q(parent=parent))
-                            .exclude(start__gt=self.end + min_event_seperation)
-                            .exclude(end__lt=self.start - min_event_seperation)
-                            .exists()
-                        ):
-                            follow_up_event_bookable = (
-                                SiteSettings.objects.first().event_in_seperation_bookable
-                            )
-                            if follow_up_event_bookable:
-                                return (
-                                    True,
-                                    PersonalEventStatusChoices.TIME_CONFLICT_FOLLOWUP,
-                                )
-                            else:
-                                return (
-                                    False,
-                                    PersonalEventStatusChoices.TIME_CONFLICT,
-                                )
-                        else:
-                            return True, PersonalEventStatusChoices.EVENT_BOOKABLE
+            case EventStatusChoices.UNOCCUPIED:
+                if not self.check_parent_can_book_event(parent):
+                    return False, PersonalEventStatusChoices.BLOCKED
+                if check_time_conflict(self.start, self.end, parent):
+                    return False, PersonalEventStatusChoices.TIME_CONFLICT
+                elif check_time_conflict_follow_up(self.start, self.end, parent):
+                    return False, PersonalEventStatusChoices.TIME_CONFLICT
+                elif check_follow_up_event_exists(self.start, self.end, parent):
+                    return (
+                        True,
+                        PersonalEventStatusChoices.TIME_CONFLICT_FOLLOWUP,
+                    )
+                else:
+                    return True, PersonalEventStatusChoices.EVENT_BOOKABLE
 
     def get_base_event(self):
         return self.teacher_event_group.day_group.base_event
@@ -378,12 +350,6 @@ class EventChangeFormula(models.Model):
 
     # id = models.UUIDField(unique=True, default=uuid.uuid4, primary_key=True)
 
-    class FormularTypeChoices(models.IntegerChoices):
-        TIME_PERIODS = 0, _("Time period")
-        BREAKS = 1, _("Break request")
-        ILLNESS = 2, _("Sick leave")
-
-    # TYPE_CHOICES = ((0, _("Submit own time periods.")),)  # Submit of personal timeslots
     type = models.IntegerField(
         choices=FormularTypeChoices, default=FormularTypeChoices.TIME_PERIODS
     )
@@ -407,7 +373,6 @@ class EventChangeFormula(models.Model):
         blank=False,
         verbose_name=_("Teacher"),
     )
-    date = models.DateField(blank=False, default=timezone.now, verbose_name=_("Date"))
     start_time = models.TimeField(blank=True, null=True, verbose_name=_("Start time"))
     end_time = models.TimeField(blank=True, null=True, verbose_name=_("End time"))
 
@@ -418,7 +383,7 @@ class EventChangeFormula(models.Model):
         default=EventFormularStatusChoices.PENDING_PROCESSING,
     )
 
-    created_at = models.DateTimeField(default=timezone.now, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
 
     class Meta:
         verbose_name = _("Event creation formula")

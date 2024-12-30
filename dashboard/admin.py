@@ -372,10 +372,10 @@ class EventChangeFormulaAdmin(admin.ModelAdmin):
     actions = [approveEventChangForm, disapproveEventChangForm]
 
 
-admin.site.register(Event, EventAdmin)
-admin.site.register(Inquiry, InquiryAdmin)
+# admin.site.register(Event, EventAdmin)
+# admin.site.register(Inquiry, InquiryAdmin)
 admin.site.register(SiteSettings)
-admin.site.register(Announcements)
-admin.site.register(EventChangeFormula, EventChangeFormulaAdmin)
-admin.site.register(TeacherEventGroup)
-admin.site.register(BaseEventGroup, BaseEventGroupAdmin)
+# admin.site.register(Announcements)
+# admin.site.register(EventChangeFormula, EventChangeFormulaAdmin)
+# admin.site.register(TeacherEventGroup)
+# admin.site.register(BaseEventGroup, BaseEventGroupAdmin)

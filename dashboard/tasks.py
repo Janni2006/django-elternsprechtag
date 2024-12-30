@@ -5,6 +5,7 @@ from django.db.models import Q
 from celery import shared_task
 from django.utils import timezone
 from authentication.models import CustomUser
+from events.choices import EventFormularTypeChoices
 
 
 @shared_task
@@ -54,7 +55,7 @@ def async_create_events_special(teachers: list, date: str, start_t: str, end_t: 
 def apply_event_change_formular(formular_id: int):
     try:
         formular = EventChangeFormula.objects.get(
-            id=formular_id, type=EventChangeFormula.FormularTypeChoices.TIME_PERIODS
+            id=formular_id, type=EventFormularTypeChoices.TIME_PERIODS
         )
     except:
         pass

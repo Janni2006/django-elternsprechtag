@@ -44,7 +44,11 @@ from dashboard.utils import check_inquiry_reopen
 import logging
 import operator
 
-from events.choices import EventStatusChoices, EventFormularStatusChoices
+from events.choices import (
+    EventStatusChoices,
+    EventFormularStatusChoices,
+    EventFormularTypeChoices,
+)
 
 
 teacher_decorators = [login_required, teacher_required]
@@ -819,7 +823,7 @@ def viewMyEvents(request):
                 order_by="start",
             ),
             "sick_leave": EventChangeFormula.objects.filter(
-                Q(type=EventChangeFormula.FormularTypeChoices.ILLNESS),
+                Q(type=EventFormularTypeChoices.ILLNESS),
                 Q(day_group__in=DayEventGroup.objects.filter(date=date.date())),
                 Q(teacher=teacher),
             ),
@@ -988,11 +992,11 @@ class EditMyEventsDetail(View):
         )
 
         match event_change_formula.type:
-            case EventChangeFormula.FormularTypeChoices.TIME_PERIODS:
+            case EventFormularTypeChoices.TIME_PERIODS:
                 form = EventChangeFormulaPeriodForm(instance=event_change_formula)
-            case EventChangeFormula.FormularTypeChoices.ILLNESS:
+            case EventFormularTypeChoices.ILLNESS:
                 form = EventChangeFormulaPeriodForm(instance=event_change_formula)
-            case EventChangeFormula.FormularTypeChoices.BREAKS:
+            case EventFormularTypeChoices.BREAKS:
                 form = EventChangeFormulaBreakForm(instance=event_change_formula)
             case _:
                 print("Wrong type")
@@ -1013,15 +1017,15 @@ class EditMyEventsDetail(View):
             raise Http404("The formula ould not be found.")
 
         match event_change_formula.type:
-            case EventChangeFormula.FormularTypeChoices.TIME_PERIODS:
+            case EventFormularTypeChoices.TIME_PERIODS:
                 form = EventChangeFormulaPeriodForm(
                     request.POST, instance=event_change_formula
                 )
-            case EventChangeFormula.FormularTypeChoices.ILLNESS:
+            case EventFormularTypeChoices.ILLNESS:
                 form = EventChangeFormulaPeriodForm(
                     request.POST, instance=event_change_formula
                 )
-            case EventChangeFormula.FormularTypeChoices.BREAKS:
+            case EventFormularTypeChoices.BREAKS:
                 form = EventChangeFormulaBreakForm(
                     request.POST, instance=event_change_formula
                 )
@@ -1152,7 +1156,7 @@ class EventBreakRequestView(View):
                 )
 
             formular = EventChangeFormula.objects.create(
-                type=EventChangeFormula.FormularTypeChoices.BREAKS,
+                type=EventFormularTypeChoices.BREAKS,
                 day_group=teacher_group.day_group,
                 teacher_event_group=teacher_group,
                 teacher=request.user,
@@ -1196,7 +1200,7 @@ class EventBreakForEventRequestView(View):
         else:
             print()
             formular = EventChangeFormula.objects.create(
-                type=EventChangeFormula.FormularTypeChoices.BREAKS,
+                type=EventFormularTypeChoices.BREAKS,
                 day_group=event.day_group,
                 teacher_event_group=event.teacher_event_group,
                 teacher=request.user,
@@ -1275,7 +1279,7 @@ class DeleteEventFormularView(View):
     def get(self, request, pk):
         formular = get_object_or_404(EventChangeFormula, pk=pk)
 
-        if formular.type == EventChangeFormula.FormularTypeChoices.TIME_PERIODS:
+        if formular.type == EventFormularTypeChoices.TIME_PERIODS:
             messages.error(request, "You can´t remove this formular.")
 
             return redirect("teacher_personal_events")

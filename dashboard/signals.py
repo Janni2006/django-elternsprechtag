@@ -22,7 +22,11 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.encoding import force_str, force_bytes
 from .utils import check_inquiry_reopen
 
-from events.choices import EventStatusChoices, EventFormularStatusChoices
+from events.choices import (
+    EventStatusChoices,
+    EventFormularStatusChoices,
+    EventFormularTypeChoices,
+)
 
 
 @receiver(post_save, sender=Event)
@@ -213,7 +217,7 @@ def openNewEventChangeFormulaOnDisapprove(sender, instance, *args, **kwargs):
         if (
             previouse.status == EventFormularStatusChoices.PENDING_CONFIRMATION
             and current.status == EventFormularStatusChoices.DECLINED
-            and current.type == EventChangeFormula.FormularTypeChoices.TIME_PERIODS
+            and current.type == EventFormularTypeChoices.TIME_PERIODS
         ):
             EventChangeFormula.objects.create(
                 teacher=instance.teacher,
@@ -238,7 +242,7 @@ def apply_break_formulars(sender, instance, *args, **kwargs):
         if (
             previouse.status == EventFormularStatusChoices.PENDING_CONFIRMATION
             and current.status == EventFormularStatusChoices.APPROVED
-            and current.type == EventChangeFormula.FormularTypeChoices.BREAKS
+            and current.type == EventFormularTypeChoices.BREAKS
         ):
             events = Event.objects.filter(
                 Q(teacher_event_group=previouse.teacher_event_group),
@@ -274,7 +278,7 @@ def apply_sick_leave_formulars(sender, instance, *args, **kwargs):
         if (
             previouse.status == EventFormularStatusChoices.PENDING_CONFIRMATION
             and current.status == EventFormularStatusChoices.APPROVED
-            and current.type == EventChangeFormula.FormularTypeChoices.ILLNESS
+            and current.type == EventFormularTypeChoices.ILLNESS
         ):
             if current.no_events:
                 events = Event.objects.filter(

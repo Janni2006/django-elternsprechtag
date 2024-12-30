@@ -28,6 +28,12 @@ class EventFormularStatusChoices(models.IntegerChoices):
     REMOVED = 4, _("Removed")
 
 
+class EventFormularTypeChoices(models.IntegerChoices):
+    TIME_PERIODS = 0, _("Time period")
+    BREAKS = 1, _("Break request")
+    ILLNESS = 2, _("Sick leave")
+
+
 class PersonalEventStatusChoices:
     EVENT_BOOKABLE = 0, _("Event bookable")
     INQUIRY_PENDING = 1, _("Inquiry pending")
