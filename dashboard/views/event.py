@@ -1,7 +1,8 @@
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from authentication.models import CustomUser, TeacherExtraData, Student, Tag
-from events.models import Event, Inquiry, SiteSettings, Announcements, DayEventGroup
+from events.models import Event, Inquiry, SiteSettings, DayEventGroup
+from dashboard.models import Announcements
 from events.choices import PersonalEventStatusChoices
 from django.db.models import Q
 from django.core.paginator import Paginator

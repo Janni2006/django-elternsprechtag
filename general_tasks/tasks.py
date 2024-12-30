@@ -11,13 +11,13 @@ from events.models import (
     Event,
     Inquiry,
     SiteSettings,
-    Announcements,
     EventChangeFormula,
     BaseEventGroup,
     LeadStatusChoices,
     DayEventGroup,
     TeacherEventGroup,
 )
+from dashboard.models import Announcements
 from authentication.models import StudentChange, Student, Upcomming_User
 from django.db.models import Q
 

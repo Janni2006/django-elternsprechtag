@@ -11,7 +11,6 @@ from events.models import (
     Event,
     Inquiry,
     SiteSettings,
-    Announcements,
     EventChangeFormula,
     BaseEventGroup,
     LeadStatusChoices,

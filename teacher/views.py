@@ -4,12 +4,12 @@ from events.models import (
     Inquiry,
     Student,
     Event,
-    Announcements,
     EventChangeFormula,
     LeadStatusChoices,
     TeacherEventGroup,
     DayEventGroup,
 )
+from dashboard.models import Announcements
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.core.paginator import Paginator

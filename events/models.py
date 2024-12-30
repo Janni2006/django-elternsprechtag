@@ -317,30 +317,30 @@ class Inquiry(models.Model):
         verbose_name_plural = _("Inquries")
 
 
-class Announcements(models.Model):
-    class AnnouncementTypeChoices(models.IntegerChoices):
-        BOOKINK_INQUIRY = 0, _("New booking inquiry")
-        APPOINTEMENT_CANCELLATION = 1, _("Appointment cancellation")
-        SYSTEM_NOTIFICATION = 2, _("System notification")
+# class Announcements(models.Model):
+#     class AnnouncementTypeChoices(models.IntegerChoices):
+#         BOOKINK_INQUIRY = 0, _("New booking inquiry")
+#         APPOINTEMENT_CANCELLATION = 1, _("Appointment cancellation")
+#         SYSTEM_NOTIFICATION = 2, _("System notification")
 
-    announcement_type = models.IntegerField(
-        choices=AnnouncementTypeChoices, default=AnnouncementTypeChoices.BOOKINK_INQUIRY
-    )
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    message = models.TextField(null=True, blank=True)
-    action_link = models.TextField(null=True, blank=True)
-    action_name = models.CharField(max_length=200, null=True, blank=True)
+#     announcement_type = models.IntegerField(
+#         choices=AnnouncementTypeChoices, default=AnnouncementTypeChoices.BOOKINK_INQUIRY
+#     )
+#     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+#     message = models.TextField(null=True, blank=True)
+#     action_link = models.TextField(null=True, blank=True)
+#     action_name = models.CharField(max_length=200, null=True, blank=True)
 
-    read = models.BooleanField(default=False)
+#     read = models.BooleanField(default=False)
 
-    created = models.DateTimeField(default=timezone.now)
+#     created = models.DateTimeField(default=timezone.now)
 
-    def encodedID(self):
-        return urlsafe_base64_encode(force_bytes(self.id))
+#     def encodedID(self):
+#         return urlsafe_base64_encode(force_bytes(self.id))
 
-    class Meta:
-        verbose_name = _("Notification")
-        verbose_name_plural = _("Notifications")
+#     class Meta:
+#         verbose_name = _("Notification")
+#         verbose_name_plural = _("Notifications")
 
 
 class EventChangeFormula(models.Model):
@@ -351,7 +351,7 @@ class EventChangeFormula(models.Model):
     # id = models.UUIDField(unique=True, default=uuid.uuid4, primary_key=True)
 
     type = models.IntegerField(
-        choices=FormularTypeChoices, default=FormularTypeChoices.TIME_PERIODS
+        choices=EventFormularTypeChoices, default=EventFormularTypeChoices.TIME_PERIODS
     )
     parent_formular = models.ForeignKey(
         "self",

@@ -8,7 +8,6 @@ from events.models import (
     Event,
     Inquiry,
     SiteSettings,
-    Announcements,
     EventChangeFormula,
     TeacherEventGroup,
     DayEventGroup,
@@ -411,7 +410,6 @@ class EventChangeFormulaAdmin(admin.ModelAdmin):
 
 admin.site.register(Event, EventAdmin)
 admin.site.register(Inquiry, InquiryAdmin)
-admin.site.register(Announcements)
 admin.site.register(EventChangeFormula, EventChangeFormulaAdmin)
 admin.site.register(TeacherEventGroup)
 admin.site.register(BaseEventGroup, BaseEventGroupAdmin)

@@ -41,11 +41,11 @@ from django.contrib.admin.views.decorators import staff_member_required
 from events.models import (
     Event,
     EventChangeFormula,
-    Announcements,
     Inquiry,
     DayEventGroup,
     TeacherEventGroup,
 )
+from dashboard.models import Announcements
 from dashboard.tasks import async_create_events_special, apply_event_change_formular
 
 from dashboard.utils import check_inquiry_reopen
