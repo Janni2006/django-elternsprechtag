@@ -40,7 +40,7 @@ from django.urls import reverse_lazy
 from django.contrib.admin.views.decorators import staff_member_required
 
 from events.models import Event, EventChangeFormula
-from dashboard.tasks import async_create_events_special, apply_event_change_formular
+from dashboard.tasks import async_create_events_special
 
 from django_tables2 import SingleTableView
 from django.views.generic import FormView

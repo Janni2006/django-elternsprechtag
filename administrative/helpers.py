@@ -46,7 +46,7 @@ from events.models import (
     TeacherEventGroup,
 )
 from dashboard.models import Announcements
-from dashboard.tasks import async_create_events_special, apply_event_change_formular
+from dashboard.tasks import async_create_events_special
 
 from dashboard.utils import check_inquiry_reopen
 

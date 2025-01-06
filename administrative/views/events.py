@@ -49,7 +49,8 @@ from events.models import (
     TeacherEventGroup,
 )
 from dashboard.models import Announcements
-from dashboard.tasks import async_create_events_special, apply_event_change_formular
+
+# from dashboard.tasks import async_create_events_special, apply_event_change_formular
 
 from dashboard.utils import check_inquiry_reopen
 
@@ -64,19 +65,20 @@ login_staff = [login_required, staff_member_required]
 @method_decorator(permission_required("dashboard.approve_disapprove"), name="dispatch")
 class AdministrativeFormulaApprovalView(View):
     def get(self, request):
+        day_groups = DayEventGroup.objects.filter(date__gte=timezone.now())
         formulars = EventChangeFormula.objects.filter(
-            Q(date__gte=timezone.now()), Q(status=1)
+            Q(day_group__in=day_groups), Q(status=1)
         )
         formulars_table = EventFormularActionTable(formulars)
 
         approved_formulars_table = EventFormularOldTable(
-            EventChangeFormula.objects.filter(Q(date__gte=timezone.now())).filter(
+            EventChangeFormula.objects.filter(Q(day_group__in=day_groups)).filter(
                 Q(status=2) | Q(status=3)
             )
         )
 
         upcomming_formulars_table = EventFormularUpcommingTable(
-            EventChangeFormula.objects.filter(Q(date__gte=timezone.now()), Q(status=0))
+            EventChangeFormula.objects.filter(Q(day_group__in=day_groups), Q(status=0))
         )
 
         formular_form = EventChangeFormularForm()
@@ -91,7 +93,7 @@ class AdministrativeFormulaApprovalView(View):
                 "action_table_entries": formulars.count(),
                 "upcomming_table": upcomming_formulars_table,
                 "upcomming_table_entries": EventChangeFormula.objects.filter(
-                    Q(status=0), Q(date__gte=timezone.now())
+                    Q(status=0), Q(day_group__in=day_groups)
                 ).count(),
                 "approved_formulars_table": approved_formulars_table,
                 "closed_table_entries": EventChangeFormula.objects.filter(
@@ -368,7 +370,7 @@ class EventAddNewDateAndFormularsView(View):
                 )
                 EventChangeFormula.objects.get_or_create(
                     teacher=teacher,
-                    date=date,
+                    # date=date,
                     day_group=day_group,
                     teacher_event_group=teacher_event_group,
                     status=0,
@@ -406,7 +408,9 @@ class EventChangeFormularApproveView(View):
                 #     formula.start_time.strftime("%H:%M:%S"),
                 #     formula.end_time.strftime("%H:%M:%S"),
                 # )
-                apply_event_change_formular.delay(formula.id)
+                # apply_event_change_formular.delay(formula.id)
+                pass
+            # TODO hier muss die neue Funktion zur Aktivierung von formulars implementiert werden!!!
 
             formula.status = 2
             formula.save()

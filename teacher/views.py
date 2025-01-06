@@ -1163,7 +1163,7 @@ class EventBreakRequestView(View):
                 date=teacher_group.day_group.date,
                 start_time=start_time,
                 end_time=end_time,
-                status=EventFormularStatusChoicesRMATION,
+                status=EventFormularStatusChoices,
             )
             formular.save()
 

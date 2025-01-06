@@ -1,5 +1,6 @@
 from time import sleep
-from events.models import Event, SiteSettings, Inquiry, EventChangeFormula
+from events.models import Event, Inquiry
+from dashboard.models import SiteSettings
 import datetime
 from django.db.models import Q
 from celery import shared_task
@@ -51,30 +52,30 @@ def async_create_events_special(teachers: list, date: str, start_t: str, end_t: 
             start = start + duration
 
 
-@shared_task
-def apply_event_change_formular(formular_id: int):
-    try:
-        formular = EventChangeFormula.objects.get(
-            id=formular_id, type=EventFormularTypeChoices.TIME_PERIODS
-        )
-    except:
-        pass
-    else:
-        start = timezone.datetime.combine(formular.date, formular.start_time)
-        end = timezone.datetime.combine(formular.date, formular.end_time)
-        teacher = formular.teacher
-        duration = SiteSettings.objects.all().first().event_duration
+# @shared_task
+# def apply_event_change_formular(formular_id: int):
+#     try:
+#         formular = EventChangeFormula.objects.get(
+#             id=formular_id, type=EventFormularTypeChoices.TIME_PERIODS
+#         )
+#     except:
+#         pass
+#     else:
+#         start = timezone.datetime.combine(formular.date, formular.start_time)
+#         end = timezone.datetime.combine(formular.date, formular.end_time)
+#         teacher = formular.teacher
+#         duration = SiteSettings.objects.all().first().event_duration
 
-        while start + duration <= end:
-            Event.objects.get_or_create(
-                teacher=teacher,
-                base_event=formular.day_group.base_event,
-                day_group=formular.day_group,
-                teacher_event_group=formular.teacher_event_group,
-                start=start,
-                end=start + duration,
-            )
-            start = start + duration
+#         while start + duration <= end:
+#             Event.objects.get_or_create(
+#                 teacher=teacher,
+#                 base_event=formular.day_group.base_event,
+#                 day_group=formular.day_group,
+#                 teacher_event_group=formular.teacher_event_group,
+#                 start=start,
+#                 end=start + duration,
+#             )
+#             start = start + duration
 
 
 @shared_task
