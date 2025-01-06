@@ -3,8 +3,13 @@ from django.utils import timezone
 from .utils import *
 import pytz
 from authentication.models import CustomUser
-from events.models import Inquiry, Event, SiteSettings
+from events.models import Inquiry, Event
+from dashboard.models import SiteSettings
 from events.choices import PersonalEventStatusChoices
+from events.helpers import (
+    get_parent_event_individual_status,
+    check_parent_can_book_event,
+)
 
 
 def create_event_date_dict(events):
@@ -41,7 +46,7 @@ def create_event_date_dict(events):
 def event_date_dict_add_book_information(parent: CustomUser, event_dict: dict):
     for date in event_dict.keys():
         for index, event in enumerate(event_dict[date]):
-            bookable, reason = event.get_parent_event_individual_status(parent)
+            bookable, reason = get_parent_event_individual_status(event, parent)
 
             # print(event.get_parent_event_individual_status(parent))
 

@@ -1,9 +1,13 @@
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from authentication.models import CustomUser, TeacherExtraData, Student, Tag
-from events.models import Event, Inquiry, SiteSettings, DayEventGroup
-from dashboard.models import Announcements
+from events.models import Event, Inquiry, DayEventGroup
+from dashboard.models import Announcements, SiteSettings
 from events.choices import PersonalEventStatusChoices
+from events.helpers import (
+    check_parent_can_book_event,
+    get_parent_event_individual_status,
+)
 from django.db.models import Q
 from django.core.paginator import Paginator
 from django.utils import timezone
@@ -92,7 +96,7 @@ class bookEventView(View):
         if event.occupied and event.parent != request.user:
             return render(request, "dashboard/events/occupied.html")
 
-        bookable, reason = event.get_parent_event_individual_status(request.user)
+        bookable, reason = get_parent_event_individual_status(event, request.user)
 
         if not bookable:
             messages.error(
@@ -162,7 +166,7 @@ class bookEventView(View):
         if event.occupied and event.parent != request.user:
             return render(request, "dashboard/events/occupied.html")
 
-        bookable, reason = event.get_parent_event_individual_status(request.user)
+        bookable, reason = get_parent_event_individual_status(event, request.user)
 
         if not bookable:
             messages.error(

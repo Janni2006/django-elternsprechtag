@@ -1,14 +1,13 @@
 from typing import Any
 from django import forms
 from events.models import (
-    Student,
     Inquiry,
-    SiteSettings,
     Event,
     DayEventGroup,
     TeacherEventGroup,
 )
-from authentication.models import CustomUser
+from authentication.models import CustomUser, Student
+from dashboard.models import SiteSettings
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _

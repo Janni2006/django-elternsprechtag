@@ -1,4 +1,5 @@
-from events.models import Student, Event
+from events.models import Event
+from authentication.models import Student
 
 
 def get_students_choices_for_event(event: Event):

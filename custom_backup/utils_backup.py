@@ -1,4 +1,12 @@
-from events.models import *
+from events.models import (
+    Event,
+    EventChangeFormula,
+    DayEventGroup,
+    TeacherEventGroup,
+    BaseEventGroup,
+    Inquiry,
+)
+from dashboard.models import SiteSettings
 from authentication.models import *
 from django.contrib.auth.models import Group, Permission
 import logging
@@ -14,13 +22,15 @@ import socket
 from .models import Backup
 from .helpers import *
 from django.core.signing import Signer
+from django.db.models import Q
+
 
 signer = Signer()
 
 
 class DateTimeEncoder(JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, (datetime.date, datetime.datetime)):
+        if isinstance(obj, (timezone.datetime.date, timezone.datetime.datetime)):
             return obj.isoformat()
         return super().default(obj)
 

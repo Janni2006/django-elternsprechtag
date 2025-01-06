@@ -7,7 +7,6 @@ from events.models import (
     DayEventGroup,
     TeacherEventGroup,
     BaseEventGroup,
-    LeadStatusChoices,
 )
 from dashboard.models import Announcements
 from django.db.models import Q

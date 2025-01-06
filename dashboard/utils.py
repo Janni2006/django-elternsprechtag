@@ -1,11 +1,11 @@
 from events.models import (
     Inquiry,
     Event,
-    CustomUser,
-    SiteSettings,
     DayEventGroup,
     TeacherEventGroup,
 )
+from authentication.models import CustomUser
+from dashboard.models import SiteSettings
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _

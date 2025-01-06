@@ -7,13 +7,13 @@ from authentication.models import CustomUser
 from events.models import (
     Event,
     Inquiry,
-    SiteSettings,
     EventChangeFormula,
     TeacherEventGroup,
     DayEventGroup,
     BaseEventGroup,
 )
 from .admin_forms import AdminEventCreationFormulaForm
+from dashboard.models import SiteSettings
 
 from django.utils.translation import gettext as _
 from django.shortcuts import render, redirect
@@ -204,7 +204,6 @@ class EventAdmin(admin.ModelAdmin):
         "teacher__last_name",
         "teacher__email",
     )
-    change_list_template = "dashboard/admin/events.html"
     list_filter = ("occupied", "status", "lead_status", "day_group", "active")
 
     # TODO: Hier muss noch die Möglichkeit hinzugefügt werden über das Admin Portal ein Event zu erstellen. Dies ist derzeit nur in mehreren Schritten möglich.
@@ -276,7 +275,7 @@ class EventChangeFormulaAdmin(admin.ModelAdmin):
         "response_actions",
     )
     search_fields = ("teacher",)
-    change_list_template = "dashboard/admin/eventCreationForm.html"
+    # change_list_template = "dashboard/admin/eventCreationForm.html"
     readonly_fields = ("response_actions",)
 
     def get_urls(self):
@@ -292,87 +291,89 @@ class EventChangeFormulaAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.process_disapproval),
                 name="event_change_formula_disapprove",
             ),
-            path(
-                "add_form",
-                self.admin_site.admin_view(self.create_event_change_formula.as_view()),
-                name="create_event_change_formula",
-            ),
+            # path(
+            #     "add_form",
+            #     self.admin_site.admin_view(self.create_event_change_formula.as_view()),
+            #     name="create_event_change_formula",
+            # ),
         ]
         return custom_urls + urls
 
-    class create_event_change_formula(View):
-        def get(self, request, *args, **kwargs):
-            return render(
-                request,
-                "dashboard/admin/addEvents.html",
-                context={"form": AdminEventCreationFormulaForm},
-            )
+    # class create_event_change_formula(View):
+    #     def get(self, request, *args, **kwargs):
+    #         return render(
+    #             request,
+    #             "dashboard/admin/addEvents.html",
+    #             context={"form": AdminEventCreationFormulaForm},
+    #         )
 
-        def post(self, request):
-            form = AdminEventCreationFormulaForm(request.POST)
-            if form.is_valid():
-                messages.info(
-                    request,
-                    "Es werden für {} Formulare erstellt.".format(
-                        "\n,".join(
-                            [
-                                teacher.email
-                                for teacher in form.cleaned_data.get("teacher")
-                            ]
-                        )
-                    ),
-                )
-                successfull = 0
-                for teacher in form.cleaned_data.get("teacher"):
-                    if not EventChangeFormula.objects.filter(
-                        Q(teacher=teacher),
-                        Q(date=form.cleaned_data.get("date")),
-                    ).exists():
-                        successfull += 1
-                        EventChangeFormula.objects.create(
-                            teacher=teacher, date=form.cleaned_data.get("date")
-                        )
-                    else:
-                        messages.info(
-                            request,
-                            "Für den Lehrer {} existierte bereits eine Anfrage für diesen Tag.".format(
-                                request.user
-                            ),
-                        )
-                messages.success(
-                    request,
-                    "Es wurden {} Anträge erfolgreich erstellt.".format(successfull),
-                )
+    #     def post(self, request):
+    #         form = AdminEventCreationFormulaForm(request.POST)
+    #         if form.is_valid():
+    #             messages.info(
+    #                 request,
+    #                 "Es werden für {} Formulare erstellt.".format(
+    #                     "\n,".join(
+    #                         [
+    #                             teacher.email
+    #                             for teacher in form.cleaned_data.get("teacher")
+    #                         ]
+    #                     )
+    #                 ),
+    #             )
+    #             successfull = 0
+    #             for teacher in form.cleaned_data.get("teacher"):
+    #                 if not EventChangeFormula.objects.filter(
+    #                     Q(teacher=teacher),
+    #                     Q(date=form.cleaned_data.get("date")),
+    #                 ).exists():
+    #                     successfull += 1
+    #                     EventChangeFormula.objects.create(
+    #                         teacher=teacher, date=form.cleaned_data.get("date")
+    #                     )
+    #                 else:
+    #                     messages.info(
+    #                         request,
+    #                         "Für den Lehrer {} existierte bereits eine Anfrage für diesen Tag.".format(
+    #                             request.user
+    #                         ),
+    #                     )
+    #             messages.success(
+    #                 request,
+    #                 "Es wurden {} Anträge erfolgreich erstellt.".format(successfull),
+    #             )
 
-                return redirect("admin:dashboard_eventchangeformula_changelist")
-            return render(
-                request, "dashboard/admin/addEvents.html", context={"form": form}
-            )
+    #             return redirect("admin:dashboard_eventchangeformula_changelist")
+    #         return render(
+    #             request, "dashboard/admin/addEvents.html", context={"form": form}
+    #         )
 
     def process_approval(self, request, formula_id):
-        formula = self.get_object(request, formula_id)
+        formula: EventChangeFormula = self.get_object(request, formula_id)
 
-        if formula.status != 1:
-            messages.warning(
-                request,
-                "Sie können diesen Antrag nicht ablehnen, da er sich hierzu im falschen Status befindet.",
-            )
-            return redirect("admin:dashboard_eventchangeformula_changelist")
+        # if formula.status != 1:
+        #     messages.warning(
+        #         request,
+        #         "Sie können diesen Antrag nicht ablehnen, da er sich hierzu im falschen Status befindet.",
+        #     )
+        #     return redirect("admin:dashboard_eventchangeformula_changelist")
 
-        if not formula.no_events:
-            async_create_events_special.delay(
-                [formula.teacher.id],
-                formula.date.strftime("%Y-%m-%d"),
-                formula.start_time.strftime("%H:%M:%S"),
-                formula.end_time.strftime("%H:%M:%S"),
-            )
+        # if not formula.no_events:
+        #     async_create_events_special.delay(
+        #         [formula.teacher.id],
+        #         formula.date.strftime("%Y-%m-%d"),
+        #         formula.start_time.strftime("%H:%M:%S"),
+        #         formula.end_time.strftime("%H:%M:%S"),
+        #     )
 
-        formula.status = 2
-        formula.save()
+        # formula.status = 2
+        # formula.save()
+
+        formula.approve()
 
         messages.success(request, "Die Termine werden nun erstellt.")
 
-        return redirect("admin:dashboard_eventchangeformula_changelist")
+        return redirect("admin:events_eventchangeformula_changelist")
 
     def process_disapproval(self, request, formula_id):
         formula = self.get_object(request, formula_id)

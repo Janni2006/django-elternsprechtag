@@ -1,14 +1,13 @@
 from django.shortcuts import render, redirect
-from authentication.models import CustomUser
+from authentication.models import CustomUser, Student
 from events.models import (
     Inquiry,
-    Student,
     Event,
     EventChangeFormula,
-    LeadStatusChoices,
     TeacherEventGroup,
     DayEventGroup,
 )
+from events.choices import LeadStatusChoices
 from dashboard.models import Announcements
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q

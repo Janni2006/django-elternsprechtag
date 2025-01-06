@@ -1,9 +1,15 @@
-from events.models import *
+from events.models import (
+    Event,
+    DayEventGroup,
+    TeacherEventGroup,
+    BaseEventGroup,
+    EventChangeFormula,
+    Inquiry,
+)
 from authentication.models import *
 from django.contrib.auth.models import Group, Permission
 import logging
 from pathlib import Path
-from django.conf import settings
 import os
 from .apps import CustomBackupConfig
 import json
@@ -19,7 +25,6 @@ import os
 import socket
 import tarfile
 from pathlib import Path
-from distutils.util import strtobool
 from django.conf import settings
 from django.db.migrations.recorder import MigrationRecorder
 from django.db.models import Count, Max

@@ -7,8 +7,8 @@ from events.models import (
     Event,
     TeacherEventGroup,
     DayEventGroup,
-    LeadStatusChoices,
 )
+from events.choices import LeadStatusChoices
 from authentication.models import Student
 from django.utils import timezone
 from django import forms

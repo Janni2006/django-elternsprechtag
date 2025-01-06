@@ -7,13 +7,12 @@ from authentication.models import CustomUser
 from events.models import (
     Event,
     Inquiry,
-    SiteSettings,
     EventChangeFormula,
     TeacherEventGroup,
     DayEventGroup,
     BaseEventGroup,
 )
-from dashboard.models import Announcements
+from dashboard.models import Announcements, SiteSettings
 from .forms import AdminEventForm, AdminEventCreationFormulaForm, EventCreationForm
 
 from django.utils.translation import gettext as _

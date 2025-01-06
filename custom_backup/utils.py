@@ -1,4 +1,11 @@
-from events.models import *
+from events.models import (
+    Event,
+    DayEventGroup,
+    TeacherEventGroup,
+    BaseEventGroup,
+    EventChangeFormula,
+    Inquiry,
+)
 from authentication.models import *
 from django.contrib.auth.models import Group, Permission
 import logging

@@ -4,7 +4,8 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q
 
-from events.models import SiteSettings, Inquiry, Event
+from events.models import Inquiry, Event
+from dashboard.models import SiteSettings
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
 
@@ -13,7 +14,10 @@ def lead_started(view_func):
     def wrapper(request, event_id, *args, **kwargs):
         if SiteSettings.objects.all().first().lead_start <= timezone.now().date():
             return view_func(request, event_id, *args, **kwargs)
-        elif SiteSettings.objects.all().first().lead_inquiry_start <= timezone.now().date():
+        elif (
+            SiteSettings.objects.all().first().lead_inquiry_start
+            <= timezone.now().date()
+        ):
             try:
                 event = Event.objects.get(id=event_id)
             except Event.MultipleObjectsReturned:
@@ -21,8 +25,9 @@ def lead_started(view_func):
             except Event.DoesNotExist:
                 print("error")
             else:
-                inquiries = Inquiry.objects.filter(Q(type=0), Q(
-                    respondent=request.user), Q(requester=event.teacher))
+                inquiries = Inquiry.objects.filter(
+                    Q(type=0), Q(respondent=request.user), Q(requester=event.teacher)
+                )
                 if inquiries:
                     if inquiries.filter(event=None):
                         return view_func(request, event_id, *args, **kwargs)
@@ -44,6 +49,6 @@ def parent_required(view_func):
         elif request.user.role == 1:
             return redirect("teacher_dashboard")
         else:
-            return HttpResponse({'error': 'Unauthorized'}, status=401)
+            return HttpResponse({"error": "Unauthorized"}, status=401)
 
     return wrapper

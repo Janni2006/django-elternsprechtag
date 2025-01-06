@@ -10,14 +10,13 @@ from django.template.loader import render_to_string
 from events.models import (
     Event,
     Inquiry,
-    SiteSettings,
     EventChangeFormula,
     BaseEventGroup,
-    LeadStatusChoices,
     DayEventGroup,
     TeacherEventGroup,
 )
 from authentication.models import StudentChange
+from dashboard.models import SiteSettings
 from django.db.models import Q
 
 from .utils import EventPDFExport

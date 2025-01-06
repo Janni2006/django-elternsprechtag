@@ -7,8 +7,8 @@ from events.models import (
     DayEventGroup,
     TeacherEventGroup,
     BaseEventGroup,
-    LeadStatusChoices,
 )
+from ..choices import LeadStatusChoices
 from dashboard.models import Announcements
 from django.db.models import Q
 from django.utils import timezone
@@ -52,6 +52,12 @@ def openNewEventChangeFormulaOnDisapprove(sender, instance, *args, **kwargs):
             previouse.childformular.all().update(
                 status=EventFormularStatusChoices.DECLINED
             )
+
+
+def apply_approved_formular(sender, instance: EventChangeFormula, *args, **kwargs):
+    match instance.type:
+        case EventFormularTypeChoices.TIME_PERIODS:
+            pass
 
 
 @receiver(pre_save, sender=EventChangeFormula)

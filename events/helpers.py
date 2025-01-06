@@ -1,6 +1,9 @@
-from .models import *
+from .models import Event, Inquiry
 from authentication.models import CustomUser
 from django.utils import timezone
+from dashboard.models import SiteSettings
+from .choices import *
+from django.db.models import Q
 
 
 def check_time_conflict(
@@ -50,3 +53,63 @@ def check_time_conflict_follow_up(
         check_follow_up_event_exists(start, end, parent)
         and not follow_up_event_bookable
     )
+
+
+def check_parent_can_book_event(event: Event, parent: CustomUser) -> bool:
+    """This function is designed to check if a specified parent user account is allowed to book the specific event.
+
+    Args:
+        parent (CustomUser): Pass in the parent
+
+    Returns:
+        bool: Describes wether or not the parent is able to book this specific event
+    """
+    if parent.role != 0:
+        raise ValueError(
+            _("This user is not a parent.")
+        )  # The specified user is not a parent.
+    match event.lead_status:
+        case LeadStatusChoices.ALL:
+            return True
+        case LeadStatusChoices.INQUIRY:
+            if Inquiry.objects.filter(
+                Q(requester=event.teacher),
+                Q(respondent=parent),
+                Q(processed=False),
+                Q(base_event=event.get_base_event()),
+            ).exists():
+                return True
+        case LeadStatusChoices.CONDITION:
+            if parent.has_perm("dashboard.condition_prebook_event"):
+                return True
+        case _:
+            return False
+    return False
+
+
+def get_parent_event_individual_status(event: Event, parent: CustomUser):
+    match event.status:
+        case EventStatusChoices.OCCUPIED:
+            if event.parent == parent:
+                return True, PersonalEventStatusChoices.BOOKED
+            else:
+                return False, PersonalEventStatusChoices.OCCUPIED
+        case EventStatusChoices.INQUIRY:
+            if event.parent == parent:
+                return True, PersonalEventStatusChoices.INQUIRY_PENDING
+            else:
+                return False, PersonalEventStatusChoices.OCCUPIED
+        case EventStatusChoices.UNOCCUPIED:
+            if not event.check_parent_can_book_event(parent):
+                return False, PersonalEventStatusChoices.BLOCKED
+            if check_time_conflict(event.start, event.end, parent):
+                return False, PersonalEventStatusChoices.TIME_CONFLICT
+            elif check_time_conflict_follow_up(event.start, event.end, parent):
+                return False, PersonalEventStatusChoices.TIME_CONFLICT
+            elif check_follow_up_event_exists(event.start, event.end, parent):
+                return (
+                    True,
+                    PersonalEventStatusChoices.TIME_CONFLICT_FOLLOWUP,
+                )
+            else:
+                return True, PersonalEventStatusChoices.EVENT_BOOKABLE

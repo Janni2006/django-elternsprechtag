@@ -1,5 +1,12 @@
 from django.shortcuts import render, redirect
-from events.models import *
+from events.models import (
+    Event,
+    DayEventGroup,
+    TeacherEventGroup,
+    BaseEventGroup,
+    EventChangeFormula,
+    Inquiry,
+)
 from authentication.models import *
 from django.views.generic import FormView
 from django.urls import reverse_lazy

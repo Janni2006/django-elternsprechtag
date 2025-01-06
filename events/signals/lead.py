@@ -7,7 +7,6 @@ from events.models import (
     DayEventGroup,
     TeacherEventGroup,
     BaseEventGroup,
-    LeadStatusChoices,
 )
 from django.db.models import Q
 from django.utils import timezone
