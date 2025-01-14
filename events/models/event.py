@@ -117,119 +117,9 @@ class TeacherEventGroup(EventGroupMainAttributes):
         return f"{self.teacher} - {str(self.day_group.date)}"
 
 
-class Event(EventMainAttributes):
-    base_event = models.ForeignKey(BaseEventGroup, on_delete=models.CASCADE, null=True)
-    day_group = models.ForeignKey(DayEventGroup, on_delete=models.CASCADE, null=True)
-    teacher = models.ForeignKey(
-        CustomUser, on_delete=models.CASCADE, limit_choices_to={"role": 1}
-    )  # limit_choices_to={'role': 1} besagt, dass nur Nutzer, wo der Wert role glwich 1 ist eingesetzt werden können, also es wird verhindert, dass Eltern oder andere als Lehrer in Terminen gespeichert werden
-    teacher_event_group = models.ForeignKey(
-        TeacherEventGroup, on_delete=models.CASCADE, null=True
-    )
-
-    parent = models.ForeignKey(
-        CustomUser,
-        on_delete=models.SET_NULL,
-        limit_choices_to={"role": 0},
-        default=None,
-        null=True,
-        blank=True,
-        related_name="%(class)s_parent",
-    )  # limit_choices_to={'role': 0} besagt, dass nur Nutzer, wo der Wert role glwich 0 ist eingesetzt werden können, also es wird verhindert, dass Lehrer oder andere als Eltern in Terminen gespeichert werden
-
-    student = models.ManyToManyField(Student, default=None, blank=True)
-
-    start = models.DateTimeField(default=timezone.now)
-    end = models.DateTimeField(default=timezone.now)
-
-    status = models.IntegerField(choices=EventStatusChoices, default=0)
-
-    occupied = models.BooleanField(default=False)
-
-    def update_event_lead_status(self, automatic=True, force=False):
-        if automatic and self.disable_automatic_changes and not force:
-            pass
-        else:
-            if timezone.now() >= self.end:
-                self.lead_status = LeadStatusChoices.NOBODY
-                self.lead_manual_override = True
-                self.disable_automatic_changes = True
-                self.save()
-            elif (
-                self.teacher_event_group.lead_status_last_change
-                >= self.lead_status_last_change
-                and (
-                    not self.lead_manual_override
-                    or (self.lead_manual_override and force)
-                )
-            ):
-                self.lead_status = self.teacher_event_group.lead_status
-                self.lead_status_last_change = timezone.now()
-
-                self.save()
-
-    # def check_parent_can_book_event(self, parent: CustomUser) -> bool:
-    #     """This function is designed to check if a specified parent user account is allowed to book the specific event.
-
-    #     Args:
-    #         parent (CustomUser): Pass in the parent
-
-    #     Returns:
-    #         bool: Describes wether or not the parent is able to book this specific event
-    #     """
-    #     if parent.role != 0:
-    #         raise ValueError(
-    #             _("This user is not a parent.")
-    #         )  # The specified user is not a parent.
-    #     match self.lead_status:
-    #         case LeadStatusChoices.ALL:
-    #             return True
-    #         case LeadStatusChoices.INQUIRY:
-    #             if Inquiry.objects.filter(
-    #                 Q(requester=self.teacher),
-    #                 Q(respondent=parent),
-    #                 Q(processed=False),
-    #                 Q(base_event=self.get_base_event()),
-    #             ).exists():
-    #                 return True
-    #         case LeadStatusChoices.CONDITION:
-    #             if parent.has_perm("dashboard.condition_prebook_event"):
-    #                 return True
-    #         case _:
-    #             return False
-    #     return False
-
-    # def get_parent_event_individual_status(self, parent: CustomUser):
-    #     match self.status:
-    #         case EventStatusChoices.OCCUPIED:
-    #             if self.parent == parent:
-    #                 return True, PersonalEventStatusChoices.BOOKED
-    #             else:
-    #                 return False, PersonalEventStatusChoices.OCCUPIED
-    #         case EventStatusChoices.INQUIRY:
-    #             if self.parent == parent:
-    #                 return True, PersonalEventStatusChoices.INQUIRY_PENDING
-    #             else:
-    #                 return False, PersonalEventStatusChoices.OCCUPIED
-    #         case EventStatusChoices.UNOCCUPIED:
-    #             if not self.check_parent_can_book_event(parent):
-    #                 return False, PersonalEventStatusChoices.BLOCKED
-    #             if check_time_conflict(self.start, self.end, parent):
-    #                 return False, PersonalEventStatusChoices.TIME_CONFLICT
-    #             elif check_time_conflict_follow_up(self.start, self.end, parent):
-    #                 return False, PersonalEventStatusChoices.TIME_CONFLICT
-    #             elif check_follow_up_event_exists(self.start, self.end, parent):
-    #                 return (
-    #                     True,
-    #                     PersonalEventStatusChoices.TIME_CONFLICT_FOLLOWUP,
-    #                 )
-    #             else:
-    #                 return True, PersonalEventStatusChoices.EVENT_BOOKABLE
-
-    def get_base_event(self):
-        return self.teacher_event_group.day_group.base_event
-
-    def bulk_create(
+class EventManager(models.Manager):
+    def bulk_slots_create(
+        self,
         teacher: CustomUser,
         start: timezone,
         end: timezone,
@@ -284,6 +174,136 @@ class Event(EventMainAttributes):
                 events.append(event)
         return events
 
+
+class Event(EventMainAttributes):
+    base_event = models.ForeignKey(BaseEventGroup, on_delete=models.CASCADE)
+    day_group = models.ForeignKey(DayEventGroup, on_delete=models.CASCADE)
+    teacher = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, limit_choices_to={"role": 1}
+    )  # limit_choices_to={'role': 1} besagt, dass nur Nutzer, wo der Wert role glwich 1 ist eingesetzt werden können, also es wird verhindert, dass Eltern oder andere als Lehrer in Terminen gespeichert werden
+    teacher_event_group = models.ForeignKey(TeacherEventGroup, on_delete=models.CASCADE)
+
+    parent = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        limit_choices_to={"role": 0},
+        default=None,
+        null=True,
+        blank=True,
+        related_name="%(class)s_parent",
+    )  # limit_choices_to={'role': 0} besagt, dass nur Nutzer, wo der Wert role glwich 0 ist eingesetzt werden können, also es wird verhindert, dass Lehrer oder andere als Eltern in Terminen gespeichert werden
+
+    student = models.ManyToManyField(Student, default=None, blank=True)
+
+    start = models.DateTimeField(default=timezone.now)
+    end = models.DateTimeField(default=timezone.now)
+
+    status = models.IntegerField(choices=EventStatusChoices, default=0)
+
+    occupied = models.BooleanField(default=False)
+
+    objects = EventManager()
+
+    def update_event_lead_status(self, automatic=True, force=False):
+        if automatic and self.disable_automatic_changes and not force:
+            pass
+        else:
+            if timezone.now() >= self.end:
+                self.lead_status = LeadStatusChoices.NOBODY
+                self.lead_manual_override = True
+                self.disable_automatic_changes = True
+                self.save()
+            elif (
+                self.teacher_event_group.lead_status_last_change
+                >= self.lead_status_last_change
+                and (
+                    not self.lead_manual_override
+                    or (self.lead_manual_override and force)
+                )
+            ):
+                self.lead_status = self.teacher_event_group.lead_status
+                self.lead_status_last_change = timezone.now()
+
+                self.save()
+
+    def cancel(self, reopen=True):
+        self.active = False
+        self.status = EventStatusChoices.CANCELED
+        self.save()
+
+        if reopen:
+            new_event = Event.objects.create(
+                base_event=self.base_event,
+                day_group=self.day_group,
+                teacher=self.teacher,
+                teacher_event_group=self.teacher_event_group,
+                start=self.start,
+                end=self.end,
+                lead_status=self.lead_status,
+                lead_manual_override=self.lead_manual_override,
+                disable_automatic_changes=self.disable_automatic_changes,
+                lead_status_last_change=self.lead_status_last_change,
+            )
+            new_event.save()
+
+    def get_base_event(self):
+        return self.teacher_event_group.day_group.base_event
+
+    # def bulk_create(
+    #     teacher: CustomUser,
+    #     start: timezone,
+    #     end: timezone,
+    #     duration: timezone.timedelta,
+    #     bulk_mode=True,
+    #     ignore_collisions=True,
+    # ):
+    #     delta = end - start
+    #     duration = SiteSettings.objects.all().first().event_duration
+    #     total_count = int(delta / duration)
+
+    #     bulk_time_slots_start = [
+    #         start + duration * slot_num for slot_num in range(total_count)
+    #     ]
+    #     bulk_time_slots_end = bulk_time_slots_start.copy()
+    #     bulk_time_slots_end.pop(0)
+    #     bulk_time_slots_end.append(bulk_time_slots_end[-1] + duration)
+
+    #     collision_events = Event.objects.filter(
+    #         Q(teacher=teacher),
+    #         Q(start__in=bulk_time_slots_start) | Q(end__in=bulk_time_slots_end),
+    #         Q(active=True),
+    #     )
+    #     # print(collision_events)
+    #     if collision_events.exists() and not ignore_collisions:
+    #         raise ValueError(
+    #             "There is a collision with an already existing, active event. Can´t proceed."
+    #         )
+    #     elif collision_events.exists():
+    #         bulk_time_slots = [
+    #             slot
+    #             for slot in bulk_time_slots_start
+    #             if not slot in list(collision_events.values_list("start", flat=True))
+    #             or not slot + duration
+    #             in list(collision_events.values_list("end", flat=True))
+    #         ]
+    #         # print([i for i in bulk_time_slots_start if not i in bulk_time_slots])
+    #     else:
+    #         bulk_time_slots = bulk_time_slots_start
+
+    #     slot_objects = [
+    #         Event(teacher=teacher, start=time_slot, end=time_slot + duration)
+    #         for time_slot in bulk_time_slots
+    #     ]
+    #     if bulk_mode:
+    #         events = Event.objects.bulk_create(slot_objects)
+    #     else:  # needs much more time as pre_save and post_save signals are triggered.
+    #         events = []
+    #         for event_object in slot_objects:
+    #             event = event_object
+    #             event.save()
+    #             events.append(event)
+    #     return events
+
     def __str__(self):
         return (
             _("Appointment from ")
@@ -321,52 +341,6 @@ class Event(EventMainAttributes):
         }
 
 
-# class Inquiry(models.Model):
-#     class InquiryTypeChoices(models.IntegerChoices):
-#         TEACHER_REQUEST = 0, _("Inquiry to book an appointment (teacher->parents)")
-#         APPOINTEMENT_REQUEST = 1, _(
-#             "Request for confirmation of an appointment (parent->teacher)"
-#         )
-
-#     base_event = models.ForeignKey(BaseEventGroup, on_delete=models.CASCADE, null=True)
-#     type = models.IntegerField(
-#         choices=InquiryTypeChoices, default=InquiryTypeChoices.TEACHER_REQUEST
-#     )
-#     requester = models.ForeignKey(
-#         CustomUser, on_delete=models.CASCADE, related_name="%(class)s_requester"
-#     )
-#     students = models.ManyToManyField(Student)
-#     respondent = models.ForeignKey(
-#         CustomUser,
-#         on_delete=models.CASCADE,
-#         default=None,
-#         null=True,
-#         blank=True,
-#         related_name="%(class)s_respondent",
-#     )
-#     reason = models.TextField()
-
-#     processed = models.BooleanField(default=False)
-#     event = models.ForeignKey(
-#         Event, on_delete=models.SET_NULL, blank=True, null=True, default=None
-#     )
-
-#     class InquiryReactionChoices(models.IntegerChoices):
-#         NO_RESPONSE = 0, _("No response")
-#         ACCEPTED = 1, _("Inquiry accepted")
-#         DECLINED = 3, _("Inquiry declined")
-
-#     respondent_reaction = models.IntegerField(
-#         choices=InquiryReactionChoices, default=InquiryReactionChoices.NO_RESPONSE
-#     )
-#     notified = models.BooleanField(default=False)
-#     created = models.DateTimeField(default=timezone.now)
-
-#     class Meta:
-#         verbose_name = _("Inquiry")
-#         verbose_name_plural = _("Inquries")
-
-
 # class Announcements(models.Model):
 #     class AnnouncementTypeChoices(models.IntegerChoices):
 #         BOOKINK_INQUIRY = 0, _("New booking inquiry")
@@ -391,145 +365,6 @@ class Event(EventMainAttributes):
 #     class Meta:
 #         verbose_name = _("Notification")
 #         verbose_name_plural = _("Notifications")
-
-
-# class EventChangeFormula(models.Model):
-#     """
-#     Dieses Model dient dazu, jedem Lehrer die Möglichkeit zu geben, seine Zeiten für den Elternsprtechtag selber einzurrichten. In Zukunft können hier auch Anträge auf die Blockierung einzelner Termine eingereicht werden.
-#     """
-
-#     # id = models.UUIDField(unique=True, default=uuid.uuid4, primary_key=True)
-
-#     type = models.IntegerField(
-#         choices=EventFormularTypeChoices, default=EventFormularTypeChoices.TIME_PERIODS
-#     )
-#     connected_events = models.ManyToManyField(Event, blank=True)
-#     parent_formular = models.ForeignKey(
-#         "self",
-#         on_delete=models.CASCADE,
-#         null=True,
-#         blank=True,
-#         related_name="childformular",
-#     )
-#     day_group = models.ForeignKey(
-#         DayEventGroup, on_delete=models.CASCADE, null=True, blank=True
-#     )
-#     teacher_event_group = models.ForeignKey(
-#         TeacherEventGroup, on_delete=models.CASCADE, null=True, blank=True
-#     )
-#     teacher = models.ForeignKey(
-#         CustomUser,
-#         on_delete=models.CASCADE,
-#         limit_choices_to={"role": 1},
-#         blank=False,
-#         verbose_name=_("Teacher"),
-#     )
-#     start_time = models.TimeField(blank=True, null=True, verbose_name=_("Start time"))
-#     end_time = models.TimeField(blank=True, null=True, verbose_name=_("End time"))
-
-#     no_events = models.BooleanField(default=False, verbose_name=_("No events"))
-
-#     status = models.IntegerField(
-#         choices=EventFormularStatusChoices,
-#         default=EventFormularStatusChoices.PENDING_PROCESSING,
-#     )
-
-#     reversable = models.BooleanField(default=False)
-#     applied = models.BooleanField(default=False)
-
-#     created_at = models.DateTimeField(auto_now_add=True, editable=False)
-
-#     def approve(self):
-#         if not self.status == EventFormularStatusChoices.PENDING_CONFIRMATION:
-#             raise ValueError("The status of the formular does not allow for approval.")
-
-#         self.status = EventFormularStatusChoices.APPROVED
-#         self.save()
-
-#     def disapprove(self):
-#         if not self.status == EventFormularStatusChoices.PENDING_CONFIRMATION:
-#             raise ValueError(
-#                 "The status of the formular does not allow for disapproval."
-#             )
-
-#         self.status = EventFormularStatusChoices.DECLINED
-#         self.save()
-
-#     def apply(self):
-#         if self.status != EventFormularStatusChoices.APPROVED:
-#             raise ValueError("Only approved formulars can be applied!")
-#         if self.applied:
-#             raise ValueError(
-#                 "It is prohibited to re-apply an already applied formular. "
-#             )
-
-#         match self.type:
-#             case EventFormularTypeChoices.TIME_PERIODS:
-#                 if not self.no_events:
-#                     # async_create_events_special.delay(
-#                     #     [self.teacher.id],
-#                     #     self.date.strftime("%Y-%m-%d"),
-#                     #     self.start_time.strftime("%H:%M:%S"),
-#                     #     self.end_time.strftime("%H:%M:%S"),
-#                     # )
-#                     date = self.day_group.date
-#                     teacher = self.teacher_event_group.teacher
-#                     start = timezone.datetime.combine(
-#                         date,
-#                         self.start_time,
-#                     )
-#                     end = timezone.datetime.combine(
-#                         date,
-#                         self.end_time,
-#                     )
-#                     duration = SiteSettings.objects.all().first().event_duration
-
-#                     events = Event.bulk_create(teacher, start, end, duration)
-
-#                     self.connected_events.set(events)
-#                     self.applied = True
-#                     self.save()
-#             case EventFormularTypeChoices.ILLNESS:
-#                 events = Event.objects.filter(
-#                     Q(teacher_event_group=self.teacher_event_group),
-#                     Q(start__gte=self.start_time),
-#                     Q(end__lte=self.end_time),
-#                     Q(active=True),
-#                 )
-
-#                 booked_events = events.filter(
-#                     Q(status=EventStatusChoices.INQUIRY)
-#                     | Q(status=EventStatusChoices.OCCUPIED),
-#                 )
-
-#                 for event in booked_events:
-#                     pass  # TODO: Implement event cancellation!
-
-#                 empty_events = events.filter(Q(status=EventStatusChoices.UNOCCUPIED))
-
-#                 empty_events.update(
-#                     lead_status=LeadStatusChoices.NOBODY,
-#                     lead_manual_override=True,
-#                     disable_automatic_changes=True,
-#                     active=False,
-#                     updated=timezone.now(),
-#                 )
-
-#                 self.connected_events.set(events)
-#                 self.applied = True
-#                 self.save()
-
-#     class Meta:
-#         verbose_name = _("Event creation formula")
-#         verbose_name_plural = _("Event creation formulas")
-#         permissions = [
-#             (
-#                 "approve_disapprove",
-#                 _(
-#                     "Can accept or reject submitted time periods for other users."
-#                 ),  # Can approve/disapprove the formulars for other users
-#             )
-#         ]
 
 
 # class EventLogsMainAttributes(models.Model):

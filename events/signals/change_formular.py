@@ -9,7 +9,7 @@ from events.models import (
     BaseEventGroup,
 )
 from ..choices import LeadStatusChoices
-from dashboard.models import Announcements
+from dashboard.models import Announcements, SiteSettings
 from django.db.models import Q
 from django.utils import timezone
 from authentication.tasks import async_send_mail
@@ -55,9 +55,24 @@ def openNewEventChangeFormulaOnDisapprove(sender, instance, *args, **kwargs):
 
 
 def apply_approved_formular(sender, instance: EventChangeFormula, *args, **kwargs):
+    previouse = EventChangeFormula.objects.get(id=instance.id)
+    if not previouse.status == EventFormularStatusChoices.PENDING_CONFIRMATION:
+        return
+    if not instance.status == EventFormularStatusChoices.APPROVED:
+        return
+
     match instance.type:
         case EventFormularTypeChoices.TIME_PERIODS:
-            pass
+            events = Event.objects.bulk_slots_create(
+                teacher=instance.teacher_event_group.teacher,
+                start=instance.start_time,
+                end=instance.end_time,
+                duration=SiteSettings.objects.all().first().event_duration,
+            )
+
+            instance.connected_events.set(events)
+            instance.status = EventFormularStatusChoices.APPROVED
+            instance.save()
 
 
 @receiver(pre_save, sender=EventChangeFormula)

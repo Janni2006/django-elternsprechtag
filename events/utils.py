@@ -1,4 +1,5 @@
-from .models import Event, Inquiry, DayEventGroup
+from events.models.event import Event, DayEventGroup
+from events.models.inquiry import Inquiry
 from .choices import *
 from django.db.models import Q
 from django.utils import timezone
@@ -8,25 +9,25 @@ from authentication.models import CustomUser
 from dashboard.models import SiteSettings
 
 
-def cancel_event(event: Event, reopen=True):
-    event.active = False
-    event.status = EventStatusChoices.CANCELED
-    event.save()
+# def cancel_event(event: Event, reopen=True):
+#     event.active = False
+#     event.status = EventStatusChoices.CANCELED
+#     event.save()
 
-    if reopen:
-        new_event = Event.objects.create(
-            base_event=event.base_event,
-            day_group=event.day_group,
-            teacher=event.teacher,
-            teacher_event_group=event.teacher_event_group,
-            start=event.start,
-            end=event.end,
-            lead_status=event.lead_status,
-            lead_manual_override=event.lead_manual_override,
-            disable_automatic_changes=event.disable_automatic_changes,
-            lead_status_last_change=event.lead_status_last_change,
-        )
-        new_event.save()
+#     if reopen:
+#         new_event = Event.objects.create(
+#             base_event=event.base_event,
+#             day_group=event.day_group,
+#             teacher=event.teacher,
+#             teacher_event_group=event.teacher_event_group,
+#             start=event.start,
+#             end=event.end,
+#             lead_status=event.lead_status,
+#             lead_manual_override=event.lead_manual_override,
+#             disable_automatic_changes=event.disable_automatic_changes,
+#             lead_status_last_change=event.lead_status_last_change,
+#         )
+#         new_event.save()
 
 
 def check_inquiry_reopen(parent: CustomUser, teacher: CustomUser):

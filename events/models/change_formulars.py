@@ -13,38 +13,14 @@ from django.db.models import Q
 
 from dashboard.models import SiteSettings
 
-from .event import Event, BaseEventGroup, DayEventGroup, TeacherEventGroup
+from events.models.event import Event, BaseEventGroup, DayEventGroup, TeacherEventGroup
 
 from ..choices import *
 from ..rules import *
 
+# from ..utils import cancel_event
+
 from rules.contrib.models import RulesModel
-
-
-# class Announcements(models.Model):
-#     class AnnouncementTypeChoices(models.IntegerChoices):
-#         BOOKINK_INQUIRY = 0, _("New booking inquiry")
-#         APPOINTEMENT_CANCELLATION = 1, _("Appointment cancellation")
-#         SYSTEM_NOTIFICATION = 2, _("System notification")
-
-#     announcement_type = models.IntegerField(
-#         choices=AnnouncementTypeChoices, default=AnnouncementTypeChoices.BOOKINK_INQUIRY
-#     )
-#     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-#     message = models.TextField(null=True, blank=True)
-#     action_link = models.TextField(null=True, blank=True)
-#     action_name = models.CharField(max_length=200, null=True, blank=True)
-
-#     read = models.BooleanField(default=False)
-
-#     created = models.DateTimeField(default=timezone.now)
-
-#     def encodedID(self):
-#         return urlsafe_base64_encode(force_bytes(self.id))
-
-#     class Meta:
-#         verbose_name = _("Notification")
-#         verbose_name_plural = _("Notifications")
 
 
 class EventChangeFormula(models.Model):
@@ -138,7 +114,9 @@ class EventChangeFormula(models.Model):
                     )
                     duration = SiteSettings.objects.all().first().event_duration
 
-                    events = Event.bulk_create(teacher, start, end, duration)
+                    events = Event.objects.bulk_slot_create(
+                        teacher, start, end, duration
+                    )
 
                     self.connected_events.set(events)
                     self.applied = True
@@ -157,7 +135,9 @@ class EventChangeFormula(models.Model):
                 )
 
                 for event in booked_events:
-                    pass  # TODO: Implement event cancellation!
+                    # pass  # TODO: Implement event cancellation!
+                    # cancel_event(event, reopen=False)
+                    event.cancel()
 
                 empty_events = events.filter(Q(status=EventStatusChoices.UNOCCUPIED))
 
@@ -184,20 +164,3 @@ class EventChangeFormula(models.Model):
                 ),  # Can approve/disapprove the formulars for other users
             )
         ]
-
-
-# class EventLogsMainAttributes(models.Model):
-#     log_type = models.IntegerField(
-#         choices=EventLogsTypeChoices, default=EventLogsTypeChoices.UPDATED
-#     )
-#     created = models.DateTimeField(auto_now_add=True, editable=False)
-
-#     class Meta:
-#         abstract = True
-
-
-# class EventChangeLogs(EventLogsMainAttributes):
-#     changed_event = models.ForeignKey(Event, on_delete=models.CASCADE)
-#     change_action = models.IntegerField(
-#         choices=EventLogsActionsCoices, default=EventLogsActionsCoices.CHANGE
-#     )
